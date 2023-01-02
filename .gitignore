@@ -6,3 +6,4 @@ output/resampled_cmic_old.csv
 output/figures/*
 
 .RData
+workflow.pptx
