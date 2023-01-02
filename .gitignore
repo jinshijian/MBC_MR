@@ -1,7 +1,8 @@
 /derived/*
-code/old/*
+/code/old/*
 /geodata/*
 /rawdata/old/*
 output/resampled_cmic_old.csv
+output/figures/*
 
 .RData
