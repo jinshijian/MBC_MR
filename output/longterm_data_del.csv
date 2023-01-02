@@ -1,0 +1,169 @@
+"PaperID","Latitude","Longitude","Meas_year","Temp_study","Precp_study","MBC_c","MBC_t","Unit","Sources","Comment1","Comment2","Paper","Paper_detail","Tannual_del","Pannual_del"
+68,36.13,137.42,2010,NA,NA,0.1189,0.0944,"g/kg","Figure 1",NA,"Xu","68",NA,10.5916666666667,2211.3
+68,36.13,137.42,2011,NA,NA,0.104,0.1396,"g/kg","Figure 1",NA,"Xu","68",NA,10.0416666666667,1925.4
+68,36.13,137.42,2013,NA,NA,0.1706,0.1522,"g/kg","Figure 1",NA,"Xu","68",NA,10.275,1882.9
+68,36.13,137.42,2014,NA,NA,0.125,0.099,"g/kg","Figure 1",NA,"Xu","68",NA,9.825,2141.7
+68,36.13,137.42,2015,NA,NA,0.1754,0.1744,"g/kg","Figure 1",NA,"Xu","68",NA,10.6916666666667,1799.9
+69,58.44,-93.48,2004,NA,NA,1.999,NA,"g/kg","Figure 2","Wet sedge","Edwards et al 2013","Edwards et al 2013",NA,-4.975,698
+69,58.44,-93.48,2005,NA,NA,1.722,NA,"g/kg","Figure 2","Wet sedge","Edwards et al 2013","Edwards et al 2013",NA,-2.70833333333333,922.7
+69,58.44,-93.48,2006,NA,NA,1.733,NA,"g/kg","Figure 2","Wet sedge","Edwards et al 2013","Edwards et al 2013",NA,-1.45833333333333,841.9
+69,58.44,-93.48,2007,NA,NA,1.4735,NA,"g/kg","Figure 2","Wet sedge","Edwards et al 2013","Edwards et al 2013",NA,-5.075,500.4
+69,58.45,-93.53,2004,NA,NA,1.787,NA,"g/kg","Figure 2","Dry sedge","Edwards et al 2013","Edwards et al 2013",NA,-5.63333333333333,674
+69,58.45,-93.53,2005,NA,NA,1.3195,NA,"g/kg","Figure 2","Dry sedge","Edwards et al 2013","Edwards et al 2013",NA,-3.3,907.7
+69,58.45,-93.53,2006,NA,NA,1.1895,NA,"g/kg","Figure 2","Dry sedge","Edwards et al 2013","Edwards et al 2013",NA,-1.86666666666667,826.3
+69,58.45,-93.53,2007,NA,NA,1.091,NA,"g/kg","Figure 2","Dry sedge","Edwards et al 2013","Edwards et al 2013",NA,-5.5,485.4
+70,50.1183,7.309,1986,NA,NA,0.514,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,7.60833333333333,642.2
+70,50.1183,7.309,1987,NA,NA,0.391,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,7.2,730.6
+70,50.1183,7.309,1988,NA,NA,0.431,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,8.50833333333333,696.2
+70,50.1183,7.309,1989,NA,NA,0.487,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,9.01666666666667,637.9
+70,50.1183,7.309,1990,NA,NA,0.402,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,9.025,689.5
+70,50.1183,7.309,1991,NA,NA,0.432,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,7.88333333333333,557.4
+70,50.1183,7.309,1992,NA,NA,0.451,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,8.69166666666667,696.6
+70,50.1183,7.309,1993,NA,NA,0.41,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,8.20833333333333,735.1
+70,50.1183,7.309,1994,NA,NA,0.375,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,9.325,630.7
+70,50.1183,7.309,1995,NA,NA,0.444,NA,"g/kg","Figure 1","CFS",NA,"Emmerling et al 2001",NA,8.6,607
+70,50.1183,7.309,1986,NA,NA,0.491,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,7.60833333333333,642.2
+70,50.1183,7.309,1987,NA,NA,0.424,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,7.2,730.6
+70,50.1183,7.309,1988,NA,NA,0.386,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,8.50833333333333,696.2
+70,50.1183,7.309,1989,NA,NA,0.475,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,9.01666666666667,637.9
+70,50.1183,7.309,1990,NA,NA,0.455,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,9.025,689.5
+70,50.1183,7.309,1991,NA,NA,0.48,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,7.88333333333333,557.4
+70,50.1183,7.309,1992,NA,NA,0.484,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,8.69166666666667,696.6
+70,50.1183,7.309,1993,NA,NA,0.447,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,8.20833333333333,735.1
+70,50.1183,7.309,1994,NA,NA,0.389,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,9.325,630.7
+70,50.1183,7.309,1995,NA,NA,0.504,NA,"g/kg","Figure 1","IFS",NA,"Emmerling et al 2001",NA,8.6,607
+71,42.45,116.67,2005,NA,NA,0.111,NA,"g/kg","Figure 3","Upper-UA",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2005,NA,NA,0.0986,NA,"g/kg","Figure 3","Upper-UN",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2005,NA,NA,0.215,NA,"g/kg","Figure 3","Upper-BA",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2005,NA,NA,0.188,NA,"g/kg","Figure 3","Upper-BN",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2006,NA,NA,0.198,NA,"g/kg","Figure 3","Upper-UA",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2006,NA,NA,0.176,NA,"g/kg","Figure 3","Upper-UN",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2006,NA,NA,0.257,NA,"g/kg","Figure 3","Upper-BA",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2006,NA,NA,0.197,NA,"g/kg","Figure 3","Upper-BN",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2007,NA,NA,0.129,NA,"g/kg","Figure 3","Upper-UA",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2007,NA,NA,0.08319,NA,"g/kg","Figure 3","Upper-UN",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2007,NA,NA,0.09559,NA,"g/kg","Figure 3","Upper-BA",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2007,NA,NA,0.08745,NA,"g/kg","Figure 3","Upper-BN",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2005,NA,NA,0.167,NA,"g/kg","Figure 3","Lower-UA",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2005,NA,NA,0.14,NA,"g/kg","Figure 3","Lower-UN",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2005,NA,NA,0.192,NA,"g/kg","Figure 3","Lower-BA",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2005,NA,NA,0.185,NA,"g/kg","Figure 3","Lower-BN",NA,"Liu et al 2010",NA,2.525,354.6
+71,42.45,116.67,2006,NA,NA,0.252,NA,"g/kg","Figure 3","Lower-UA",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2006,NA,NA,0.211,NA,"g/kg","Figure 3","Lower-UN",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2006,NA,NA,0.295,NA,"g/kg","Figure 3","Lower-BA",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2006,NA,NA,0.259,NA,"g/kg","Figure 3","Lower-BN",NA,"Liu et al 2010",NA,3.38333333333333,335.6
+71,42.45,116.67,2007,NA,NA,0.198,NA,"g/kg","Figure 3","Lower-UA",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2007,NA,NA,0.135,NA,"g/kg","Figure 3","Lower-UN",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2007,NA,NA,0.21,NA,"g/kg","Figure 3","Lower-BA",NA,"Liu et al 2010",NA,3.85,314.2
+71,42.45,116.67,2007,NA,NA,0.16,NA,"g/kg","Figure 3","Lower-BN",NA,"Liu et al 2010",NA,3.85,314.2
+72,-15.6,-47.6,2011,NA,NA,0.304,NA,"g/kg","Figrue 2","Treatment 6",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.309,NA,"g/kg","Figrue 2","Treatment 6",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.416,NA,"g/kg","Figrue 2","Treatment 6",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.363,NA,"g/kg","Figrue 2","Treatment 7",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.329,NA,"g/kg","Figrue 2","Treatment 7",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.437,NA,"g/kg","Figrue 2","Treatment 7",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.316,NA,"g/kg","Figrue 2","Treatment 8",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.343,NA,"g/kg","Figrue 2","Treatment 8",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.468,NA,"g/kg","Figrue 2","Treatment 8",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.432,NA,"g/kg","Figrue 2","Treatment 9",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.371,NA,"g/kg","Figrue 2","Treatment 9",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.478,NA,"g/kg","Figrue 2","Treatment 9",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.52,NA,"g/kg","Figrue 2","Treatment 10",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.409,NA,"g/kg","Figrue 2","Treatment 10",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.529,NA,"g/kg","Figrue 2","Treatment 10",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.46,NA,"g/kg","Figrue 2","Treatment 11",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.467,NA,"g/kg","Figrue 2","Treatment 11",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.565,NA,"g/kg","Figrue 2","Treatment 11",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.304,NA,"g/kg","Figrue 2","Treatment 15",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.149,NA,"g/kg","Figrue 2","Treatment 15",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.251,NA,"g/kg","Figrue 2","Treatment 15",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.448,NA,"g/kg","Figrue 2","Treatment 16",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.379,NA,"g/kg","Figrue 2","Treatment 16",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.449,NA,"g/kg","Figrue 2","Treatment 16",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.292,NA,"g/kg","Figrue 2","Treatment 17",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.222,NA,"g/kg","Figrue 2","Treatment 17",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.307,NA,"g/kg","Figrue 2","Treatment 17",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.573,NA,"g/kg","Figrue 2","Treatment 18",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.429,NA,"g/kg","Figrue 2","Treatment 18",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.516,NA,"g/kg","Figrue 2","Treatment 18",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.384,NA,"g/kg","Figrue 2","Treatment 19",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.383,NA,"g/kg","Figrue 2","Treatment 19",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.511,NA,"g/kg","Figrue 2","Treatment 19",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.581,NA,"g/kg","Figrue 2","Treatment 20",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.456,NA,"g/kg","Figrue 2","Treatment 20",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.51,NA,"g/kg","Figrue 2","Treatment 20",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.362,NA,"g/kg","Figrue 2","Treatment 21",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.303,NA,"g/kg","Figrue 2","Treatment 21",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.436,NA,"g/kg","Figrue 2","Treatment 21",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.109,NA,"g/kg","Figrue 2","Treatment 1",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.11,NA,"g/kg","Figrue 2","Treatment 1",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.214,NA,"g/kg","Figrue 2","Treatment 1",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.232,NA,"g/kg","Figrue 2","Treatment 2",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.124,NA,"g/kg","Figrue 2","Treatment 2",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.183,NA,"g/kg","Figrue 2","Treatment 2",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.205,NA,"g/kg","Figrue 2","Treatment 3",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.164,NA,"g/kg","Figrue 2","Treatment 3",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.24,NA,"g/kg","Figrue 2","Treatment 3",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.09236,NA,"g/kg","Figrue 2","Treatment 4",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.153,NA,"g/kg","Figrue 2","Treatment 4",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.223,NA,"g/kg","Figrue 2","Treatment 4",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.248,NA,"g/kg","Figrue 2","Treatment 5",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.155,NA,"g/kg","Figrue 2","Treatment 5",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.258,NA,"g/kg","Figrue 2","Treatment 5",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.31,NA,"g/kg","Figrue 2","Treatment 12",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.238,NA,"g/kg","Figrue 2","Treatment 12",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.315,NA,"g/kg","Figrue 2","Treatment 12",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.394,NA,"g/kg","Figrue 2","Treatment 13",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.28,NA,"g/kg","Figrue 2","Treatment 13",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.304,NA,"g/kg","Figrue 2","Treatment 13",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+72,-15.6,-47.6,2011,NA,NA,0.443,NA,"g/kg","Figrue 2","Treatment 14",NA,"Lopes et al 2018",NA,21.1833333333333,1449.2
+72,-15.6,-47.6,2013,NA,NA,0.309,NA,"g/kg","Figrue 2","Treatment 14",NA,"Lopes et al 2018",NA,21.5666666666667,1427.9
+72,-15.6,-47.6,2015,NA,NA,0.452,NA,"g/kg","Figrue 2","Treatment 14",NA,"Lopes et al 2018",NA,21.7833333333333,1168.4
+73,-37.8,175.25,1990,NA,NA,7.207,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,14.1583333333333,1274.2
+73,-37.8,175.25,1991,NA,NA,5.18,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1991,NA,NA,7.437,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1991,NA,NA,7.448,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1991,NA,NA,9.257,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1992,NA,NA,7.637,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1992,NA,NA,5.92,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1992,NA,NA,8.922,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1992,NA,NA,9.536,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1993,NA,NA,10.291,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,12.35,926.2
+73,-37.8,175.25,1993,NA,NA,8.56,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,12.35,926.2
+73,-37.8,175.25,1993,NA,NA,7.179,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,12.35,926.2
+73,-37.8,175.25,1994,NA,NA,7.412,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,12.4083333333333,1166.4
+73,-37.8,175.25,1994,NA,NA,5.933,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,12.4083333333333,1166.4
+73,-37.8,175.25,1994,NA,NA,7.937,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,12.4083333333333,1166.4
+73,-37.8,175.25,1995,NA,NA,5.445,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.725,1543.3
+73,-37.8,175.25,1995,NA,NA,7.983,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.725,1543.3
+73,-37.8,175.25,1995,NA,NA,8.232,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.725,1543.3
+73,-37.8,175.25,1996,NA,NA,8.97,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.3666666666667,1442.4
+73,-37.8,175.25,1996,NA,NA,6.059,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.3666666666667,1442.4
+73,-37.8,175.25,1996,NA,NA,8.68,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13.3666666666667,1442.4
+73,-37.8,175.25,1997,NA,NA,8.548,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13,1005
+73,-37.8,175.25,1997,NA,NA,6.003,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13,1005
+73,-37.8,175.25,1997,NA,NA,5.647,NA,"ug CO2-C g-1","Figrue 2","Annual0-5cm","SIR","Wardle et al 1999",NA,13,1005
+73,-37.8,175.25,1990,NA,NA,5.664,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,14.1583333333333,1274.2
+73,-37.8,175.25,1990,NA,NA,4.121,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,14.1583333333333,1274.2
+73,-37.8,175.25,1991,NA,NA,4.329,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1991,NA,NA,4.706,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1991,NA,NA,3.855,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1991,NA,NA,5.109,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.6,1292.3
+73,-37.8,175.25,1992,NA,NA,4.683,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1992,NA,NA,5.667,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1992,NA,NA,4.958,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1992,NA,NA,6.93,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.0916666666667,1387.8
+73,-37.8,175.25,1993,NA,NA,6.644,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,12.35,926.2
+73,-37.8,175.25,1993,NA,NA,6.568,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,12.35,926.2
+73,-37.8,175.25,1993,NA,NA,6.198,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,12.35,926.2
+73,-37.8,175.25,1994,NA,NA,5.503,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,12.4083333333333,1166.4
+73,-37.8,175.25,1994,NA,NA,4.722,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,12.4083333333333,1166.4
+73,-37.8,175.25,1994,NA,NA,5.438,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,12.4083333333333,1166.4
+73,-37.8,175.25,1995,NA,NA,6.393,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.725,1543.3
+73,-37.8,175.25,1995,NA,NA,5.853,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.725,1543.3
+73,-37.8,175.25,1995,NA,NA,6.088,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.725,1543.3
+73,-37.8,175.25,1996,NA,NA,6.085,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.3666666666667,1442.4
+73,-37.8,175.25,1996,NA,NA,6.531,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.3666666666667,1442.4
+73,-37.8,175.25,1996,NA,NA,5.92,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13.3666666666667,1442.4
+73,-37.8,175.25,1997,NA,NA,5.902,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13,1005
+73,-37.8,175.25,1997,NA,NA,5.658,NA,"ug CO2-C g-1","Figrue 2","Perennial0-5cm","SIR","Wardle et al 1999",NA,13,1005

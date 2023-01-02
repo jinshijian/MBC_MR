@@ -1,0 +1,26 @@
+{
+    "id": "70A6CEEB",
+    "path": "H:/patoine/code/main_analysis_3_resample_and_temporalTrend_v2.R",
+    "project_path": "code/main_analysis_3_resample_and_temporalTrend_v2.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1672650117341.0,
+    "source_on_save": false,
+    "relative_order": 8,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "156,0",
+        "scrollLine": "144"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1672626501,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1672626501,
+    "read_only": false,
+    "read_only_alternatives": []
+}

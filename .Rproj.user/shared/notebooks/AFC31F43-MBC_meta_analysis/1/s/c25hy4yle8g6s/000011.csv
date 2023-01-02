@@ -1,0 +1,3 @@
+"0","#https://bookdown.org/MathiasHarrer/Doing_Meta_Analysis_in_R/forest.html#forest-R"
+"0","# tiff(""../output/MetaForestry.tiff"", width = 12, height = 28, pointsize = 1/300, units = 'in', res = 300)"
+"0","forest.meta(meta1, lab.e = ""Warm"", leftlabs = c(""RCT"", ""N"", ""Mean"", ""SD"", ""N"", ""Mean"", ""SD""))"

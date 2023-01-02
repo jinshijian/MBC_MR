@@ -1,0 +1,1286 @@
+---
+title: "MBC_re_analysis"
+author: "Jinshi"
+date: '2022-08-02'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Set chunks defaults, these options will be applied to all subsequent chunks
+knitr::opts_chunk$set(message = TRUE, include = TRUE, echo = FALSE,
+                      fig.height = 4, fig.width = 8)
+```
+
+
+## Load packages
+```{r load packages}
+library(dplyr)
+library("ggplot2")
+theme_set(theme_bw())
+library(readxl)
+library(tidyr)
+library(patchwork)
+library(ggpubr)
+library(ggmap)
+library(maps)
+library(mapdata)
+library(leaflet)
+library(here)
+library(patchwork)
+```
+
+## Creat functions
+```{r creat functions}
+# function for reading data from excel
+read_xlsx <- function(x, n_sheet, n_skip) read_excel(file.path(x), sheet = n_sheet, skip = n_skip)
+
+# creat function do linear regression for each region
+lm_model <- function(sdata, var_region){
+  lm <- lm(sdata$MBC_change ~ sdata$Temp_change)
+  lm_sum <- summary(lm)
+  intercept <- lm_sum$coefficients[1,1]
+  slope <- lm_sum$coefficients[2,1]
+  p_slope <- lm_sum$coefficients[2,4]
+  tibble(region = var_region, 
+         intercept = intercept,
+         slope = slope,
+         p_slope = round(p_slope, 3)) -> out
+  return (out)  }
+
+# plot world map
+word_bkgd <- function (sdata) {
+  ggplot(data = sdata) + 
+    # geom_polygon(aes(x = long, y = lat , fill = region , group = group, alpha = 0.1), color = "white") + 
+    geom_polygon(aes(x = long, y = lat, group = group, alpha = 0.1), color = "white", fill = "gray") + 
+    coord_fixed(1.3) +
+    theme(axis.text.y   = element_text(size = 12),
+          axis.text.x   = element_text(size = 12),
+          axis.title.y   = element_text(size = 13, margin = margin(t = 0, r = 12, b = 0, l = 0)),
+          axis.title.x   = element_text(size = 13, margin = margin(t = 12, r = 0, b = 0, l = 0)),
+          panel.background = element_blank(),
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(colour = "black"),
+          panel.border = element_rect(colour = "black", fill = NA, size = 1.25))+
+    theme(legend.position = "none")+
+    scale_x_continuous(name = "Longitude", breaks = seq(-180, 180, 30),
+                       labels = seq(-180, 180, 30)) +
+    scale_y_continuous(name = "Latitude", limits = c(-60, 90), breaks = seq(-90, 90, 15),
+                       labels = seq(-90,90,15))
+}
+
+# creat function do linear regression for each longterm experiment
+longterm_model <- function(sdata, var_study){
+  lm <- lm(sdata$MBC_c ~ sdata$Tannual_del)
+  lm_sum <- summary(lm)
+  intercept <- lm_sum$coefficients[1,1]
+  slope <- lm_sum$coefficients[2,1]
+  slope_se <- lm_sum$coefficients[2,2]
+  p_slope <- lm_sum$coefficients[2,4]
+  tibble(Study = var_study, 
+         intercept = intercept,
+         slope = slope,
+         slope_se = slope_se,
+         p_slope = round(p_slope, 3),
+         tmin = min(sdata$Tannual_del) %>% round(2),
+         tmax = max(sdata$Tannual_del) %>% round(2)) -> out
+  return (out)}
+
+```
+
+
+
+```{r load data}
+mbc_Patoine <- read_excel("../rawdata/glc_cmic_data.xlsx", sheet = 2, skip = 0)
+nc_raw_data <- read_excel("../rawdata/Raw_data.xlsx", sheet=1, skip = 0)
+mbc_metadata <- read_excel("../rawdata/MBC_metadata.xlsx", sheet=1, skip = 0)
+mbc_metadata %>% 
+  mutate(
+    MBC_ROM = log(MBC_t/MBC_c)) -> mbc_metadata
+
+# longterm_data_del <- drake::readd(longterm_data_del)
+longterm_data_del <- read.csv('../output/longterm_data_del.csv')
+```
+
+
+## replot Patoine et al 2022 figure 5 (Figure 1)
+```{r meta results}
+Patoine_data <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=2, n_skip = 0)
+Meta_subset <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=4, n_skip = 0)
+
+# jpeg("output/figures/Figure1_meta_result.png", width = 12, height = 6, pointsize = 1/300, units = 'in', res = 300)
+
+par( mar=c(2, 0.2, 0.2, 0.2)
+     , mai=c(0.25, 0.2, 0.35, 0.1)  # by inches, inner margin
+     , omi = c(0.5, 1, 0.1, 0.75)  # by inches, outer margin
+     , mgp = c(0.3, 0.3, 0) # set distance of axis
+     , tcl = 0.4
+     # , cex.axis = 1.0
+     , mfrow=c(1,2))
+
+## plot cashcrop
+Patoine_data$pch <- c(15,15,15,16,16,16)
+Patoine_data$col <- c("blue","blue","blue", "black","black","black")
+
+x_min <- min(Patoine_data$Low, na.rm = T)
+x_max <- max(Patoine_data$High, na.rm = T)
+
+plot(Patoine_data$ID ~ Patoine_data$Mean, lwd=2
+     # ,xlim=c(0,21),ylim=c(1,16)
+     , las=1
+     , xaxt='n', yaxt='n'
+     , xlim = c(x_min-0.05, x_max+0.3)
+     , ylim = c(0.5, 7.5)
+     , xlab = '', ylab=''
+     , main='a'
+     , cex.main = 1.5
+     , adj = 0
+     , col = Patoine_data$col
+     , pch = Patoine_data$pch
+     # , cex = 0.75
+     # , xaxs="i"
+)
+
+arrows(Patoine_data$Low, Patoine_data$ID, Patoine_data$High, Patoine_data$ID
+       ,code=3,length=0.05,angle=90,Patoine_data$col,lwd=2)
+
+abline(v=0, col="red", lty=2, lwd=2)
+abline(h=c(4), col="black", lty=3, lwd=2)
+
+axis (side = 1, at = seq(-1,0.4,0.2), labels = seq(-1,0.4,0.2), cex=1, las = 1)
+axis (side = 2, at = Patoine_data$ID, labels = Patoine_data$Study, cex=1, las = 2)
+mtext(side = 1, text = paste("Rate of change (% per year)"), line = 2, cex=1.05, outer = F, adj = 0.5)
+
+text(x_max + 0.025, Patoine_data$ID, paste(Patoine_data$Scenario), cex=0.85, adj=0)
+# text(-0.45, 7.25, "(a)", cex=1.25, adj=0)
+
+
+# plot meta result
+Meta_subset$pch = c(16,16,16,16,16,15)
+Meta_subset$col = c("black","black","black","black","black","red")
+
+x_min <- min(Meta_subset$Low, na.rm = T)
+x_max <- max(Meta_subset$High, na.rm = T)
+  
+plot(Meta_subset$ID ~ Meta_subset$Mean, lwd=2
+     # ,xlim=c(0,21),ylim=c(1,16)
+     , las=1
+     , xaxt='n', yaxt='n'
+     , xlim = c(x_min-0.075, x_max+0.1)
+     , ylim = c(0.5, 7.5)
+     , xlab = '', ylab=''
+     , main='b'
+     , adj = 0
+     , cex.main = 1.5
+     , col = Meta_subset$col
+     , pch = Meta_subset$pch
+     # , cex = 0.75
+     # , xaxs="i"
+     # , cex.main = 2
+     
+)
+
+arrows(Meta_subset$Low, Meta_subset$ID, Meta_subset$High, Meta_subset$ID
+       ,code=3,length=0.05,angle=90,Meta_subset$col,lwd=2)
+
+abline(v=0, col="red", lty=2, lwd=2)
+abline(h=c(2), col="black", lty=3, lwd=2)
+
+axis (side = 1, at = seq(-0.5,0.5,0.1), labels = seq(-0.5,0.5,0.1), cex=1, las = 1)
+axis (side = 4, at = Meta_subset$ID, labels = Meta_subset$Subgroup, cex=1, las = 2)
+mtext(side = 1, text = paste("LN (response ratio)"), line = 2, cex=1.05, outer = F, adj = 0.5)
+
+# text(-0.45, 7.25, "(b)", cex=1.25, adj=0)
+
+# dev.off()
+```
+
+
+```{r plot resample results}
+resample_result <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=6, n_skip = 0)
+
+par( mar=c(2, 0.2, 0.2, 0.2)
+     , mai=c(0.25, 0.2, 0.35, 0.1)  # by inches, inner margin
+     , omi = c(0.5, 1, 0.1, 0.75)  # by inches, outer margin
+     , mgp = c(0.3, 0.3, 0) # set distance of axis
+     , tcl = 0.4
+     # , cex.axis = 1.0
+     , mfrow=c(1,1))
+
+
+# plot meta result
+resample_result$pch = c(16,16,16,16,16,16)
+resample_result$col = c("black","black","black","black","black","black")
+
+x_min <- min(resample_result$Low, na.rm = T)
+x_max <- max(resample_result$High, na.rm = T)
+  
+plot(resample_result$ID ~ resample_result$Mean, lwd=2
+     # ,xlim=c(0,21),ylim=c(1,16)
+     , las=1
+     , xaxt='n', yaxt='n'
+     , xlim = c(x_min-0.075, x_max+0.1)
+     , ylim = c(0.5, 6.5)
+     , xlab = '', ylab=''
+     , main='b'
+     , adj = 0
+     , cex.main = 1.5
+     , col = resample_result$col
+     , pch = resample_result$pch
+     # , cex = 0.75
+     # , xaxs="i"
+     # , cex.main = 2
+     
+)
+
+arrows(resample_result$Low, resample_result$ID, resample_result$High, resample_result$ID
+       ,code=3,length=0.05,angle=90,resample_result$col,lwd=2)
+
+abline(v=0, col="red", lty=2, lwd=2)
+
+axis (side = 1, at = seq(-0.5,0.5,0.1), labels = seq(-0.5,0.5,0.1), cex=1, las = 1)
+axis (side = 4, at = resample_result$ID, labels = resample_result$Subgroup, cex=1, las = 2)
+mtext(side = 1, text = paste("rate of change (% per year)"), line = 2, cex=1.05, outer = F, adj = 0.5)
+
+```
+
+
+## long term MBC variability
+```{r}
+longterm_data_del %>% select(PaperID, MBC_c, Tannual_del) %>% 
+  ggplot(aes(x = Tannual_del, y = MBC_c)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(.~PaperID, scales = "free") 
+```
+
+
+## get linear model regression coeffients
+```{r get linear model regression coeffients}
+bind_rows(
+  longterm_model(longterm_data_del %>% filter(PaperID == 68), "68"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 69), "69"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 70), "70"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 71), "71"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 72), "72"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 73), "73")) -> longterm_output
+
+longterm_output %>% 
+  mutate(tmean = (tmin + tmax)/2) -> longterm_output
+
+longterm_output
+```
+
+## replot Patoine et al 2022 figure 5 (Figure 1-version2)
+```{r meta results}
+
+# jpeg("output/figures/Figure1_meta_result_v2.png", width = 12, height = 6, pointsize = 1/300, units = 'in', res = 300)
+
+par( mar=c(2, 0.2, 0.2, 0.2)
+     , mai=c(0.25, 0.2, 0.35, 0.1)  # by inches, inner margin
+     , omi = c(0.5, 1, 0.1, 0.75)  # by inches, outer margin
+     , mgp = c(0.3, 0.3, 0) # set distance of axis
+     , tcl = 0.4
+     # , cex.axis = 1.0
+     , mfrow=c(1,2))
+
+## plot cashcrop
+longterm_output$pch <- c(16,16,16,16,16,16)
+longterm_output$col <- rep("red",6)
+longterm_output$Low <- longterm_output$slope-2*longterm_output$slope_se
+longterm_output$High <- longterm_output$slope+2*longterm_output$slope_se
+longterm_output$Study2 <- c(73:68)
+
+x_min <- min(longterm_output$slope-2*longterm_output$slope_se, na.rm = T)
+x_max <- max(longterm_output$slope+2*longterm_output$slope_se, na.rm = T)
+
+plot(longterm_output$Study2 ~ longterm_output$slope, lwd=2
+     # ,xlim=c(0,21),ylim=c(1,16)
+     , las=1
+     , xaxt='n', yaxt='n'
+     , xlim = c(x_min-0.05, x_max+0.3)
+     , ylim = c(67.5, 73.5)
+     , xlab = '', ylab=''
+     , main='a'
+     , cex.main = 1.5
+     , adj = 0
+     , col = longterm_output$col
+     , pch = longterm_output$pch
+     # , cex = 0.75
+     # , xaxs="i"
+)
+
+arrows(longterm_output$Low, as.numeric(longterm_output$Study2), longterm_output$High, as.numeric(longterm_output$Study2)
+       ,code=3,length=0.05,angle=90,longterm_output$col,lwd=2)
+
+abline(v=0, col="black", lty=2, lwd=2)
+
+axis (side = 1, at = seq(-1.5,0.5,0.25), labels = seq(-1.5,0.5,0.25), cex=1, las = 1)
+axis (side = 2, at = longterm_output$Study2, labels = c("LT1", "LT2", "LT3", "LT4", "LT5", "LT6"), cex=1, las = 2)
+mtext(side = 1, text = paste("Rate of change (% per year)"), line = 2, cex=1.05, outer = F, adj = 0.5)
+
+# text(-0.45, 7.25, "(a)", cex=1.25, adj=0)
+
+
+# plot meta result
+Meta_subset$pch = c(16,16,16,16,16,15)
+Meta_subset$col = c("black","black","black","black","black","black")
+
+x_min <- min(Meta_subset$Low, na.rm = T)
+x_max <- max(Meta_subset$High, na.rm = T)
+  
+plot(Meta_subset$ID ~ Meta_subset$Mean, lwd=2
+     # ,xlim=c(0,21),ylim=c(1,16)
+     , las=1
+     , xaxt='n', yaxt='n'
+     , xlim = c(x_min-0.075, x_max+0.1)
+     , ylim = c(0.5, 7.5)
+     , xlab = '', ylab=''
+     , main='b'
+     , adj = 0
+     , cex.main = 1.5
+     , col = Meta_subset$col
+     , pch = Meta_subset$pch
+     # , cex = 0.75
+     # , xaxs="i"
+     # , cex.main = 2
+     
+)
+
+arrows(Meta_subset$Low, Meta_subset$ID, Meta_subset$High, Meta_subset$ID
+       ,code=3,length=0.05,angle=90,Meta_subset$col,lwd=2)
+
+abline(v=0, col="blue", lty=2, lwd=2)
+abline(h=c(2), col="black", lty=3, lwd=2)
+
+axis (side = 1, at = seq(-0.5,0.5,0.1), labels = seq(-0.5,0.5,0.1), cex=1, las = 1)
+axis (side = 4, at = Meta_subset$ID, labels = Meta_subset$Subgroup, cex=1, las = 2)
+mtext(side = 1, text = paste("LN (response ratio)"), line = 2, cex=1.05, outer = F, adj = 0.5)
+
+# text(-0.45, 7.25, "(b)", cex=1.25, adj=0)
+
+# dev.off()
+```
+
+
+## replot Patoine et al 2022 figure 5 (Figure 1-version2) use ggplot
+```{r}
+# panel 1 ---------------------------------------------------------------------------------------
+Meta_subset$ID[6] = 1.75
+Meta_subset %>% 
+  ggplot(aes(x=Mean, y=ID)) +
+  geom_point(alpha = 0.5, col = "black") +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = 'LN (response ratio)',
+       y = "") +
+  geom_vline(xintercept = 0, linetype = 2, color = "black", size = 1) +
+  # geom_hline(yintercept = c(2,1), linetype = 1, color = "black", size = 0.5) +
+  annotate("rect", xmin = -0.4, xmax = 0.3, ymin = 1.25, ymax = 2.25, alpha = 0.5) +
+  geom_pointrange(aes(xmin=Low, xmax = High), col = "black") +
+    # xlim(c(-0.2, 0.2)) +
+  scale_y_continuous(position = "left", breaks = c(Meta_subset$ID,1), labels = c(Meta_subset$Subgroup,"")) +
+  theme(axis.title.y = element_blank())  -> panel_meta
+
+# panel 2 ---------------------------------------------------------------------------------------
+xmin <- c(longterm_output$Low[1:5],-0.65)
+longterm_output %>% 
+  ggplot(aes(x=slope, y=Study2)) +
+  geom_point(alpha = 0.5, col = "red") +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Slope~of~linear~regression~(mmol~kg^-1~degree~C^-1)), y = "") +
+  geom_vline(xintercept = 0, linetype = 2,
+             color = "black", size = 1) +
+  geom_pointrange(aes(xmin=xmin,  xmax = High), col = "red") +
+  geom_segment(aes(x=-0.8, y=68, xend=-0.70, yend=68), col = "red") +
+  geom_segment(aes(x=-0.7, y=67.5, xend=-0.7, yend=68), col = "red") +
+  geom_segment(aes(x=-0.65, y=68.5, xend=-0.65, yend=68), col = "red") +
+  geom_segment(aes(x=-0.7, y=67.5, xend=-0.65, yend=68.5), col = "red") +
+  # xlim(c(-0.8, 0.3)) +
+  scale_y_continuous(position = "right",
+                     breaks = c(68:73) ,labels = c("LT6", "LT5", "LT4", "LT3", "LT2", "LT1")) +
+  theme(axis.title.y = element_blank()) -> panel_LT
+
+panel_meta
+panel_LT
+
+```
+
+
+## plot MAT vs MBC based on Patoine data
+```{r plot MAT vs MBC based on Patoine data}
+mbc_Patoine %>% 
+  ggplot(aes(x = tmean/10-273.15, y = Cmic)) + 
+  geom_point() +
+  geom_smooth()
+
+mbc_Patoine %>% 
+  ggplot(aes(x = tmean/10-273.15, y = Cmic)) + 
+  geom_point() +
+  geom_smooth(method = lm)
+
+mbc_Patoine %>% filter(tmean/10-273.15 > 0) %>% 
+  ggplot(aes(x = tmean/10-273.15, y = Cmic)) + 
+  geom_point() +
+  geom_smooth(method = lm)
+
+```
+
+## test the relationship between MBC change and temperature change
+```{r test MBC vs temperature based on Patoine}
+nc_raw_data %>% 
+  ggplot(aes(x = Temp_change, y = MBC_change)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(data = nc_raw_data %>% filter(P_slope < 0.05), method = "lm", fill = "pink", col = "red") +
+  facet_wrap(vars(Region), ncol = 5) +
+  labs(x = expression(Temperature~change~(degree~C)),
+       y = expression(MBC~change~('%'))) +
+  theme(axis.title = element_text(size = 15))
+
+# ggsave(here("output/figures", "Figure_X1.png"), width = 12, height = 7)
+
+# unique(nc_raw_data$Region)
+bind_rows(
+  lm_model(nc_raw_data %>% filter(Region == "Caribean"), "Caribean"),
+  lm_model(nc_raw_data %>% filter(Region == "Central Africa"), "Central Africa"),
+  lm_model(nc_raw_data %>% filter(Region == "Central and Western Europe"), "Central and Western Europe"),
+  lm_model(nc_raw_data %>% filter(Region == "Central Asia"), "Central Asia"),
+  lm_model(nc_raw_data %>% filter(Region == "East Africa and adjacent island"), "East Africa and adjacent island"),
+  lm_model(nc_raw_data %>% filter(Region == "Eastern Europe"), "Eastern Europe"),
+  lm_model(nc_raw_data %>% filter(Region == "Mesoamerica"), "Mesoamerica"),
+  lm_model(nc_raw_data %>% filter(Region == "North-East Asia"), "North-East Asia"),
+  lm_model(nc_raw_data %>% filter(Region == "North Africa"), "North Africa"),
+  lm_model(nc_raw_data %>% filter(Region == "North America"), "North America"),
+  lm_model(nc_raw_data %>% filter(Region == "Oceania"), "Oceania"),
+  lm_model(nc_raw_data %>% filter(Region == "South-East Asia"), "South-East Asia"),
+  lm_model(nc_raw_data %>% filter(Region == "South America"), "South America"),
+  lm_model(nc_raw_data %>% filter(Region == "South Asia"), "South Asia"),
+  lm_model(nc_raw_data %>% filter(Region == "Southern Africa"), "Southern Africa"),
+  lm_model(nc_raw_data %>% filter(Region == "West Africa"), "West Africa"),
+  lm_model(nc_raw_data %>% filter(Region == "Western Asia"), "Western Asia")
+)
+
+```
+
+## Test how outlier affect the relationship between MBC and MAT
+```{r outlier effcts test}
+mbc_Patoine %>% 
+  mutate(tmean_c = tmean/10-273.15) -> mbc_Patoine
+
+lm_m <- lm(mbc_Patoine$Cmic ~ mbc_Patoine$tmean_c)
+summary(lm_m)
+
+mbc_Patoine$cookd <- cooks.distance(lm_m)
+mbc_Patoine$student_res <- rstudent(lm_m)
+
+plot(mbc_Patoine$cookd, pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 4*mean(mbc_Patoine$cookd, na.rm=T), col="red") # add cutoff line
+
+plot(mbc_Patoine$student_res, pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 4*mean(mbc_Patoine$cookd, na.rm=T), col="red") # add cutoff line
+
+mbc_Patoine %>% filter(cookd < 4*mean(cookd, na.rm=T)) %>% 
+  ggplot(aes(x = tmean_c, y = Cmic)) + 
+  geom_point() +
+  geom_smooth(method = lm)
+
+mbc_Patoine %>% filter(cookd < 4*mean(cookd, na.rm=T)) %>% filter(abs(student_res) < 2)
+sub_data <- mbc_Patoine %>% filter(abs(student_res) < 2)
+
+lm(sub_data$Cmic ~ sub_data$tmean_c) %>% 
+  summary()
+
+mbc_Patoine$student_res %>% max()
+```
+
+## plot residual
+```{r residual plot}
+mbc_Patoine %>% 
+  ggplot(aes(tmean_c, Cmic)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = expression(Temperature~(degree~C)),
+       y = expression(MBC~(mmol~kg^-1))) -> lm_plot
+
+mbc_Patoine %>% 
+  ggplot(aes(tmean_c, student_res)) +
+  geom_point() +
+  geom_point(data = mbc_Patoine %>% filter(student_res >= 2),
+             aes(tmean_c, student_res),
+             col = "red") +
+  geom_hline(yintercept = 2, col = "red", lty = 2) +
+  labs(x = expression(Temperature~(degree~C)),
+       y = expression(Student~residuals)) -> res_plot
+
+lm_plot / res_plot +
+  plot_annotation(tag_levels = 'a')
+# ggsave(here("output/figures", "Figure_X2.png"), width = 8, height = 7)
+
+```
+
+
+## Relationship between MBC and temperature (Figure 2)
+```{r MBC vs Temp test}
+mbc_Patoine$tmean_c %>% min()
+mbc_Patoine$tmean_c %>% max()
+
+
+tibble(Temperature = c(-6:30), MBC = 91.1992 + -2.8856*Temperature) %>% 
+  ggplot(aes(Temperature, MBC)) +
+  geom_point(alpha = 0) +
+  stat_function(fun = function(x) { 91.1992 + -2.8856*x }, col = 'blue') +
+  # stat_function(fun = function(x) {ifelse(x >= -1 & x <= 29.5, 55.9068 + -1.1375*x, NA)} , col = "blue") +
+  labs(x = expression(Temperature~(degree~C)),
+       y = expression(MBC~(mmol~kg^-1))) ->
+  panel1
+
+panel1 +
+  stat_function(fun = function(x) {ifelse(x >= min(longterm_data_del$Tannual_del) & 
+                                            x <= max(longterm_data_del$Tannual_del),
+                                          69.901-3.267*x, NA)}, col = "red", lwd = 1) -> panel1
+
+# calculate and get y move intercept
+tibble(adj1 = 69.901-3.267*longterm_output$tmean[1]-(longterm_output$intercept[1]+longterm_output$slope[1]*longterm_output$tmean[1]),
+       adj2 = 69.901-3.267*longterm_output$tmean[2]-(longterm_output$intercept[2]+longterm_output$slope[2]*longterm_output$tmean[2]),
+       adj3 = 69.901-3.267*longterm_output$tmean[3]-(longterm_output$intercept[3]+longterm_output$slope[3]*longterm_output$tmean[3]),
+       adj4 = 69.901-3.267*longterm_output$tmean[4]-(longterm_output$intercept[4]+longterm_output$slope[4]*longterm_output$tmean[4]),
+       adj5 = 69.901-3.267*longterm_output$tmean[5]-(longterm_output$intercept[5]+longterm_output$slope[5]*longterm_output$tmean[5]),
+       adj6 = 69.901-3.267*longterm_output$tmean[6]-(longterm_output$intercept[6]+longterm_output$slope[6]*longterm_output$tmean[6])) -> 
+  lonterm_adj
+
+
+panel1 +
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[1] & x <= longterm_output$tmax[1],
+                                          longterm_output$intercept[1]+lonterm_adj$adj1 +
+                                            longterm_output$slope[1]*x, NA)}, col = "orange", lwd = 1) +
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[2] & x <= longterm_output$tmax[2],
+                                          longterm_output$intercept[2]+lonterm_adj$adj2 +
+                                            longterm_output$slope[2]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[3] & x <= longterm_output$tmax[3],
+                                          longterm_output$intercept[3]+lonterm_adj$adj3 +
+                                            longterm_output$slope[3]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[4] & x <= longterm_output$tmax[4],
+                                          longterm_output$intercept[4]+lonterm_adj$adj4 +
+                                            longterm_output$slope[4]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[5] & x <= longterm_output$tmax[5],
+                                          longterm_output$intercept[5]+lonterm_adj$adj5 +
+                                            longterm_output$slope[5]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[6] & x <= longterm_output$tmax[6],
+                                          longterm_output$intercept[6]+lonterm_adj$adj6 +
+                                            longterm_output$slope[6]*x, NA)}, col = "orange", lwd = 1) -> panel1
+
+## add and show meta lm
+panel1 +
+  stat_function(fun = function(x) {ifelse(x >= min(mbc_data_lm$MAT) & 
+                                            x <= max(mbc_data_lm$MAT),
+                                          178.222-10.868*x, NA)}, col = "black", lwd = 1) 
+
+
+## add legend line
+panel1 +
+  # geom_segment(aes(x=-5, y=40, xend=-3.5, yend=40), col = "gray") +
+  geom_segment(aes(x=-5, y=40, xend=-3.5, yend=40), col = "blue") +
+  geom_segment(aes(x=-5, y=30, xend=-3.5, yend=30), col = "red") +
+  geom_segment(aes(x=-5, y=20, xend=-3.5, yend=20), col = "orange") +
+  # geom_segment(aes(x=-5, y=0, xend=-3.6, yend=0), col = "black") +
+  annotate("text", x = -3, y = c(40,30,20), 
+           label = c("Patoine et al.", "Long-term across sites", "Long-term by each site"),
+           size = c(3,3,3), hjust = 0) -> panel1
+
+# add number of year text
+longterm_data_del %>% 
+  mutate(MBC_c = MBC_c*83.33) %>% 
+  select(PaperID, Tannual_del, MBC_c) %>% 
+  group_by(PaperID) %>% 
+  summarise(MAT = mean(Tannual_del), MBC = mean(MBC_c)) -> n_yr_position
+lonterm_adj %>% gather() -> lonterm_adj_gather
+
+n_yr_position %>%
+  mutate(y_position = longterm_output$intercept+lonterm_adj_gather$value + longterm_output$slope*n_yr_position$MAT) ->
+  n_yr_position
+
+panel1 +
+  annotate("text", x = n_yr_position$MAT,
+           y = n_yr_position$y_position+c(5,7,7,7,7,5),
+           label = c("5yr","4yr","10yr","3yr","3yr","7yr"),
+           hjust = 0) -> panel1
+
+panel1 + 
+  annotate("text", x = 5, y = 90, col = "blue", hjust = 0,
+           label = expression("y="~'91.20-2.89x'~(R[adj]^2~"=0.04, p<0.01"))) +
+  annotate("text", x = -5, y = 10, col = "red", hjust = 0,
+           label = expression("y="~"69.90-3.27x"~(R[adj]^2~"=0.20, p=0.25"))) -> panel1
+
+
+## add regression line based on MBC data
+panel1+
+  stat_function(fun = function(x) {ifelse(x >= min(mbc_metadata$MAT, na.rm = T) & 
+                                            x <= max(mbc_metadata$MAT, na.rm = T),
+                                          178.222-10.868*x, NA)}, col = "black", lwd = 1)
+
+ggsave(here("output/figures", "Figure_X4_small.png"), width = 6, height = 4)
+
+```
+
+
+```{r MBC vs Temperature version 2}
+# update function
+longterm_model2 <- function(sdata, var_study){
+  sdata$MBC_c = sdata$MBC_c/12*1000
+  lm <- lm(sdata$MBC_c ~ sdata$Tannual_del)
+  lm_sum <- summary(lm)
+  intercept <- lm_sum$coefficients[1,1]
+  slope <- lm_sum$coefficients[2,1]
+  p_slope <- lm_sum$coefficients[2,4]
+  tibble(Study = var_study, 
+         intercept = intercept,
+         slope = slope,
+         p_slope = round(p_slope, 3),
+         tmin = min(sdata$Tannual_del) %>% round(2),
+         tmax = max(sdata$Tannual_del) %>% round(2)) -> out
+  return (out)}
+
+# model results
+bind_rows(
+  longterm_model2(longterm_data_del %>% filter(PaperID == 68), "68"),
+  longterm_model2(longterm_data_del %>% filter(PaperID == 69), "69"),
+  longterm_model2(longterm_data_del %>% filter(PaperID == 70), "70"),
+  longterm_model2(longterm_data_del %>% filter(PaperID == 71), "71"),
+  longterm_model2(longterm_data_del %>% filter(PaperID == 72), "72"),
+  longterm_model2(longterm_data_del %>% filter(PaperID == 73), "73")) -> longterm_output2
+  
+
+
+longterm_data_del %>% 
+  filter(PaperID != 73) %>% 
+  transmute(Cmic = MBC_c/12*1000, Tannual_del = Tannual_del) %>% 
+  ggplot(aes(Tannual_del, Cmic)) +
+  geom_point(col = "pink") -> point_raw_plot
+
+point_raw_plot +
+  stat_function(fun = function(x) {ifelse(x >= min(longterm_data_del$Tannual_del) & 
+                                            x <= max(longterm_data_del$Tannual_del),
+                                          69.901-3.267*x, NA)}, col = "orange", lwd = 1) +
+  stat_function(fun = function(x) {ifelse(x >= longterm_output2$tmin[1] & x <= longterm_output2$tmax[1],
+                                          longterm_output2$intercept[1]+longterm_output2$slope[1]*x, NA)}, col = "red", lwd = 1) +
+  stat_function(fun = function(x) {ifelse(x >= longterm_output2$tmin[2] & x <= longterm_output2$tmax[2],
+                                          longterm_output2$intercept[2]+longterm_output2$slope[2]*x, NA)}, col = "red", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output2$tmin[3] & x <= longterm_output2$tmax[3],
+                                          longterm_output2$intercept[3]+longterm_output2$slope[3]*x, NA)}, col = "red", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output2$tmin[4] & x <= longterm_output2$tmax[4],
+                                          longterm_output2$intercept[4]+longterm_output2$slope[4]*x, NA)}, col = "red", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output2$tmin[5] & x <= longterm_output2$tmax[5],
+                                          longterm_output2$intercept[5]+longterm_output2$slope[5]*x, NA)}, col = "red", lwd = 1) -> point_raw_plot
+
+point_raw_plot +
+  stat_function(fun = function(x) { 91.1992 + -2.8856*x }, col = 'blue') +
+  # stat_function(fun = function(x) {ifelse(x >= -1 & x <= 29.5, 55.9068 + -1.1375*x, NA)} , col = "blue") +
+  labs(x = expression(Temperature~(degree~C)),
+       y = expression(MBC~(mmol~kg^-1))) -> point_raw_plot
+
+point_raw_plot +
+  # geom_segment(aes(x=-5, y=40, xend=-3.5, yend=40), col = "gray") +
+  geom_segment(aes(x=10, y=150, xend=13.5, yend=150), col = "blue") +
+  geom_segment(aes(x=10, y=135, xend=13.5, yend=135), col = "red") +
+  geom_segment(aes(x=10, y=120, xend=13.5, yend=120), col = "orange") +
+  # geom_segment(aes(x=-5, y=0, xend=-3.6, yend=0), col = "black") +
+  annotate("text", x = 15, y = c(150,135,120), 
+           label = c("Patoine et al.", "Long-term by each site", "Long-term across sites"),
+           size = c(3,3,3), hjust = 0) -> point_raw_plot
+
+point_raw_plot +
+  annotate("text", x = 5, y = 88, col = "blue", hjust = 0,
+           label = expression("y="~'91.20-2.89x'~(R[adj]^2~"=0.04, p<0.01"))) +
+  annotate("text", x = -7.5, y = 42, col = "orange", hjust = 0,
+           label = expression("y="~"69.90-3.27x"~(R[adj]^2~"=0.20, p=0.25"))) -> point_raw_plot
+
+# add text
+point_raw_plot +
+  annotate("text", x = n_yr_position[1:5,]$MAT,
+           y = n_yr_position[1:5,]$MBC+c(5,7,7,7,7),
+           label = paste0("LT",n_yr_position[1:5,]$PaperID-67),
+           hjust = 0) -> point_raw_plot
+  
+```
+
+
+## MBC vs temperature output
+```{r Interannual variability test, fig.width=8, fig.height=8}
+# plot MBC change vs warming magnitude
+lm(mbc_metadata$MBC_ROM ~ mbc_metadata$Magnitude_W + I(mbc_metadata$Magnitude_W^2)) %>% summary() -> meta_lm_summary
+tibble(a = meta_lm_summary$coefficients[1,1],
+       b = meta_lm_summary$coefficients[2,1],
+       c = meta_lm_summary$coefficients[3,1]) -> meta_nls_coef
+
+# y_max appear at
+mbc_metadata %>% 
+  ggplot(aes(Magnitude_W, MBC_ROM)) +
+  geom_point(aes(size = MBC_c_n), alpha = 0.5) +
+  geom_point(data = mbc_metadata %>% filter(Paper %in% c(68,69)),
+             aes(size = MBC_c_n), alpha = 1.0, col = "blue") +
+  geom_point(data = mbc_metadata %>% filter(Paper %in% c(0)),
+             aes(size = MBC_c_n), alpha = 1, col = "black") +
+  # geom_smooth() +
+  stat_function(fun = function(x) {meta_nls_coef$a + meta_nls_coef$b*x + meta_nls_coef$c*x^2},
+                col = "black", size = 2)+
+  geom_vline(xintercept = -meta_nls_coef$b/(2*meta_nls_coef$c), linetype=3, 
+                color = "red", size=1) +
+  scale_y_continuous(labels = function(x) sprintf("%.2f", x)) +
+  labs(x = expression(Warming~magnitude~(degree~C)),
+       y = expression(LN~(RR))) +
+  theme(legend.title=element_blank(),
+        panel.background = element_rect(fill='transparent'),
+        plot.background = element_rect(fill='transparent', color=NA),
+        legend.background = element_rect(fill='transparent'), #transparent legend bg
+        legend.position = c(0.80, 0.775)) +
+  annotate("text", x = 1, y = -0.9, col = "black", hjust = 0,
+           label = expression("y="~"-0.38+0.42x-0.08x"^2~(R[adj]^2~"=0.23, p<0.01"))) -> panel2
+
+
+panel1 / panel2
+```
+
+## ROM vs warming duration
+```{r ROM vs durartion}
+# y_max appear at
+mbc_metadata %>% 
+  mutate(Magnitude = cut(Magnitude_W, breaks = c(0,1,2,3,4,5))) -> mbc_metadata
+
+mbc_metadata %>% 
+  transmute(MBC_change = MBC_ROM, Temp_change = Duration, Magnitude = Magnitude) -> sub_mbc_metadata
+
+bind_rows(
+  lm_model(sub_mbc_metadata, "All"),
+  lm_model(sub_mbc_metadata %>% filter(Magnitude == "(0,1]"), "(0,1]"),
+  lm_model(sub_mbc_metadata %>% filter(Magnitude == "(1,2]"), "(1,2]"),
+  lm_model(sub_mbc_metadata %>% filter(Magnitude == "(2,3]"), "(2,3]"),
+  lm_model(sub_mbc_metadata %>% filter(Magnitude == "(3,4]"), "(3,4]"),
+  lm_model(sub_mbc_metadata %>% filter(Magnitude == "(4,5]"), "(4,5]")
+)
+
+
+mbc_metadata %>% 
+  ggplot(aes(Duration, MBC_ROM)) +
+  geom_point(aes(size = MBC_c_n), alpha = 0.5) +
+  geom_smooth(method = "lm") +
+  labs(x = expression(Warming~duration~(year)),
+       y = expression(LN~(RR))) +
+  facet_grid(Magnitude~.) +
+  labs(size = "Replication") -> plot_duration
+  
+dur_level = c("(0,1]","(1,2]","(2,3]","(3,4]","(4,5]")
+ann_text <- data.frame(Duration = 20, MBC_ROM = 1, 
+                       Magnitude = factor("(0,1]", levels = dur_level))
+plot_duration + 
+  geom_text(data = ann_text,label = "P=0.176") +
+  geom_text(data = data.frame(Duration = 20, MBC_ROM = 1, Magnitude = factor("(1,2]", levels = dur_level)),
+            label = "p=0.257")+
+  geom_text(data = data.frame(Duration = 20, MBC_ROM = 1, Magnitude = factor("(2,3]", levels = dur_level)),
+            label = "p=0.286")+
+  geom_text(data = data.frame(Duration = 20, MBC_ROM = 1, Magnitude = factor("(3,4]", levels = dur_level)),
+            label = "p=0.128")+
+  geom_text(data = data.frame(Duration = 20, MBC_ROM = 1, Magnitude = factor("(4,5]", levels = dur_level)),
+            label = "p=0.812")
+
+
+# ggsave(here("output/figures", "Figure_X6.png"), width = 8, height = 7)
+  
+```
+
+
+## MBC vs MAP by study
+```{r small interannual variability}
+## creat function
+interannual_byStudy <- function(tmin, tmax, i){
+  lonterm_adj %>% gather() -> longterm_adj
+  tibble(Temperature = seq(tmin,tmax,0.1), MBC = 69.901 + -3.267*Temperature) %>% 
+    ggplot(aes(Temperature, MBC)) +
+    geom_point(alpha = 0) +
+    stat_function(fun = function(x) { 69.901 + -3.267*x }, col = 'red') +
+    stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[i] & x <= longterm_output$tmax[i],
+                                            longterm_output$intercept[i]+longterm_adj$value[i] +
+                                              longterm_output$slope[i]*x, NA)}, col = "orange", lwd = 1) +
+    labs(x = expression(Temperature~(degree~C)), y = expression(MBC~('mmol/kg'))) 
+}
+
+interannual_byStudy(longterm_output$tmin[1], longterm_output$tmax[1], 1) -> small_study1
+interannual_byStudy(longterm_output$tmin[2], longterm_output$tmax[2], 2) -> small_study2
+interannual_byStudy(longterm_output$tmin[3], longterm_output$tmax[3], 3) -> small_study3
+interannual_byStudy(longterm_output$tmin[4], longterm_output$tmax[4], 4) -> small_study4
+interannual_byStudy(longterm_output$tmin[5], longterm_output$tmax[5], 5) -> small_study5
+interannual_byStudy(longterm_output$tmin[6], longterm_output$tmax[6], 6) -> small_study6
+
+(small_study1|small_study2) / (small_study3 | small_study4) / (small_study5 | small_study6) -> plot_by_study
+plot_by_study + plot_annotation(tag_levels = 'a')
+
+ggsave(here("output/figures", "Figure_X3_small.png"), width = 10, height = 8)
+
+ 
+```
+
+
+## spatial map
+```{r world map, fig.height=4, fig.width=4}
+# Base map - word map
+worldMap <- map_data(map = "world")
+basemap <- word_bkgd(worldMap)
+
+# plot meta_site
+mbc_metadata %>% 
+  dplyr::select(Latitude, Longitude) %>% 
+  na.omit() %>% 
+  count(Latitude, Longitude) ->
+  meta_count
+
+## add site legend
+size_legend <- tibble(x = rep(170, 4),
+                      y = c(45,30,15,0),
+                      size = c(2,4,6,8))
+
+
+# plot meta sites
+basemap +
+  geom_point(data = meta_count, aes(x = meta_count$Longitude, y = meta_count$Latitude), 
+               color = "black", shape = 1, size = meta_count$n, alpha = 1, stroke = 1) +
+  geom_point(data = mbc_metadata %>% filter(Paper %in% c(68,69)),
+             aes(x = Longitude, y = Latitude),
+             color = "blue", shape = 16, size = 3, alpha = 1) +
+  geom_point(data = longterm_data_del, aes(x = Longitude, y = Latitude),
+             color = "red", shape = 1, size = 2, alpha = 0.75, stroke = 2) +
+  # legend
+  geom_point(data = tibble(x = rep(-170, 3), y = c(-25, -40, -55), size = 1),
+             aes(x, y, size = c(3,3,3))
+             , shape = c(1, 16, 1)
+             , color = c("black", "blue", "red"), alpha = 1, stroke = 1) +
+  annotate("text", x = -160, y = c(-25, -40, -55), 
+           label = c("Warming experiment", "Within Patoine et al.", "Long-term sites"),
+           size = c(3,3,3), hjust = 0) +
+  geom_point(data = size_legend, aes(x, y, size = size)
+             , shape = c(1, 1, 1, 1)
+             , color = c("black"), alpha = 1, stroke = 1) +
+  annotate("text", x = 180, y = c(45,30,15,0), 
+           label = c("2", "4", "6", "8"),
+           size = c(3,3,3,3), hjust = 0) -> site_meta
+
+
+
+# add sites with student residuals < 2
+mbc_Patoine %>% 
+  # filter(abs(student_res) < 2) %>% 
+  dplyr::select(latitude, longitude) %>% 
+  na.omit() %>% 
+  count(latitude, longitude) ->
+  Patoine_count
+
+Patoine_count %>% count(n)
+meta_count %>% count(n)
+
+sitemap <- basemap +
+  geom_point(data = Patoine_count, aes(x = Patoine_count$longitude, y = Patoine_count$latitude), 
+               color = "blue", shape = 16, size = Patoine_count$n, alpha = 0.25)
+
+
+
+# add new outlier points and longterm
+mbc_Patoine %>% filter(abs(student_res) >= 2) %>% 
+  dplyr::select(latitude, longitude) %>% 
+  na.omit() %>% 
+  count(latitude, longitude) ->
+  Patoine_outlier_count
+
+# data for legend
+cc_legend <- tibble(x = rep(-170, 2),
+                    y = c(-25, -40),
+                    size = 1)
+
+sitemap <- sitemap +
+  # geom_point(data = Patoine_outlier_count, aes(x = longitude, y = latitude), 
+  #              color = "blue", shape = 16, size = Patoine_outlier_count$n, alpha = 0.75) +
+  geom_point(data = longterm_data_del %>% filter(PaperID != 73), aes(x = Longitude, y = Latitude),
+             color = "red", shape = 1, size = 2, alpha = 0.75, stroke = 2) +
+  # legend
+  geom_point(data = cc_legend, aes(x, y, size = c(3,3))
+             , shape = c(16, 1)
+             , color = c("blue", "red"), alpha = 1, stroke = 1) +
+  annotate("text", x = -160, y = c(-25, -40), 
+           label = c("Patoine et al.", "Long-term sites"),
+           size = c(3,3), hjust = 0) +
+  geom_point(data = size_legend, aes(x, y, size = size)
+             , shape = c(16, 16, 16, 16)
+             , color = c("blue"), alpha = 0.5, stroke = 1) +
+  annotate("text", x = 180, y = c(45,30,15,0), 
+           label = c("2", "4", "6", "8"),
+           size = c(3,3,3,3), hjust = 0)
+
+print(sitemap)
+
+
+site_meta + (panel_meta + panel_LT) +
+  plot_layout(heights = c(2, 1.5)) +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag.position = c(0.02, 1.01), plot.tag = element_text(vjust = 2)) &
+  theme(plot.tag = element_text(size = 15, hjust = -2, vjust = 0, face = "bold"))
+
+# cowplot::plot_grid(panel_LT, panel_meta, labels = c("b", "c"))
+
+ggsave(here("output/figures", "site_meta_longterm.png"), width = 8, height = 8)
+
+```
+
+
+```{r output world map, fig.height=8, fig.width=13}
+(point_raw_plot|sitemap) / (panel2|site_meta) +
+  plot_layout(widths = c(1, 1.35)) +
+  plot_annotation(tag_levels = 'a') & 
+  theme(plot.tag.position = c(0, 1),
+        plot.tag = element_text(size = 20, hjust = -2, vjust = 0, face = "bold")) 
+
+# ggsave(here("output/figures", "Figure_X3.png"), width = 13, height = 8)
+```
+
+
+## test code
+```{r linear regression between ROM and MAT}
+mbc_metadata %>% 
+  filter(MBC_unit == "g/kg") %>% 
+  ggplot(aes(MAT, MBC_c)) + 
+  geom_point(aes(size = MBC_c_n), alpha = 0.5) +
+  geom_smooth(method = lm)
+```
+
+
+## replot Patoine et al 2022 figure 5
+```{r test meta results}
+Patoine_data_figure5 = read_xlsx("data/Patoine/Patoine_data_figure5.xlsx", n_sheet=1, n_skip = 0)
+
+# tiff("output/figures/Figure3.tiff", width = 8, height = 8, pointsize = 1/300, units = 'in', res = 300)
+
+par( mar=c(2, 0.2, 0.2, 0.2)
+     , mai=c(0.25, 0.25, 0.1, 0.1)  # by inches, inner margin
+     , omi = c(0.5, 2.25, 0.1, 0.1)  # by inches, outer margin
+     , mgp = c(0.3, 0.3, 0) # set distance of axis
+     , tcl = 0.4
+     # , cex.axis = 1.0
+     , mfrow=c(1,1))
+
+## plot cashcrop
+Patoine_data_figure5$pch <- c(15,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16)
+Patoine_data_figure5$col <- c("red",rep("black",17))
+
+x_min <- min(Patoine_data_figure5$Low, na.rm = T)
+x_max <- max(Patoine_data_figure5$High, na.rm = T)
+
+plot(Patoine_data_figure5$ID ~ Patoine_data_figure5$Mean, lwd=2
+     # ,xlim=c(0,21),ylim=c(1,16)
+     , las=1
+     , xaxt='n', yaxt='n'
+     , xlim = c(x_min-0.05, x_max+0.05)
+     , ylim = c(0.5, 22.5)
+     , xlab = '', ylab='', main=''
+     , col = Patoine_data_figure5$col
+     , pch = Patoine_data_figure5$pch
+     # , cex = 0.75
+     # , xaxs="i"
+)
+
+arrows(Patoine_data_figure5$Low, Patoine_data_figure5$ID, Patoine_data_figure5$High, Patoine_data_figure5$ID
+       ,code=3,length=0.05,angle=90,Patoine_data_figure5$col,lwd=2)
+
+abline(v=0, col="red", lty=2, lwd=2)
+abline(h=c(21,15,10,4), col="black", lty=3, lwd=2)
+
+axis (side = 1, at = c(-0.3,-0.2,-0.1,0,0.1,0.2), labels = c(-0.3,-0.2,-0.1,0,0.1,0.2), cex=1, las = 1)
+axis (side = 2, at = Patoine_data_figure5$ID, labels = paste(Patoine_data_figure5$Site, sep = ""), cex=1, las = 2)
+mtext(side = 1, text = paste("Rate of change (% per year)"), line = 2, cex=1.05, outer = F, adj = 0.5)
+
+# dev.off()
+```
+
+
+## Plot panel 3
+```{r panel 3}
+## test and add five longterm relationship to the panel
+longterm_data_del %>% select(PaperID, Tannual_del, MBC_c) %>% filter(!PaperID %in% c(73)) %>% 
+  group_by(PaperID) %>% 
+  summarise(across(everything(), list(mean))) %>% 
+  ggplot(aes(MBC_c_1, Tannual_del_1)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+longterm_data_del %>% select(PaperID, Tannual_del, MBC_c) %>% filter(!PaperID %in% c(73)) %>% 
+  group_by(PaperID) %>% 
+  summarise(across(everything(), list(mean))) -> longterm_data_summarize
+longterm_data_summarize$MBC_c_1 <- longterm_data_summarize$MBC_c_1/0.012 # convert unit from g/kg to mmol/g
+lm(longterm_data_summarize$MBC_c_1 ~ longterm_data_summarize$Tannual_del_1) %>% summary()
+
+## add relationship of MBC~MAT from meta sites
+mbc_metadata %>% filter(MBC_unit=="g/kg") %>% select(MAT, MBC_c) %>%
+  mutate(MBC_c = MBC_c/0.012) %>% na.omit() -> mbc_data_lm
+lm(mbc_data_lm$MBC_c ~ mbc_data_lm$MAT) %>%  summary()
+
+mbc_metacsv_ndvi = read.csv("output/mbc_meta_final2.csv")
+mbc_metacsv_ndvi %>% 
+  mutate(MAT = tmean/10-273.15) -> mbc_metacsv_ndvi
+
+mbc_metacsv_ndvi %>% select(MAT, Cmic) %>% 
+  group_by(MAT) %>% 
+  summarise(across(everything(), list(mean))) -> mbc_metacsv_sum
+
+lm(mbc_metacsv_sum$Cmic_1 ~ mbc_metacsv_sum$MAT) %>% summary()
+lm(mbc_metacsv_ndvi$Cmic ~ mbc_metacsv_ndvi$MAT) %>%summary()
+
+tibble(Cmic = c(mbc_metacsv_sum$Cmic_1, longterm_data_summarize$MBC_c_1),
+       MAT = c(mbc_metacsv_sum$MAT, longterm_data_summarize$Tannual_del_1)) -> mbc_meta_longterm
+
+lm(mbc_meta_longterm$Cmic ~ mbc_meta_longterm$MAT) -> mbc_meta_longterm_lm 
+mbc_meta_longterm_lm %>%summary()
+
+## plot
+mbc_Patoine$tmean_c %>% min()
+mbc_Patoine$tmean_c %>% max()
+
+
+tibble(Temperature = c(-6:30), MBC = 91.1992 + -2.8856*Temperature) %>% 
+  ggplot(aes(Temperature, MBC)) +
+  geom_point(alpha = 0) +
+  stat_function(fun = function(x) { 91.1992 + -2.8856*x }, col = 'blue') +
+  # stat_function(fun = function(x) {ifelse(x >= -1 & x <= 29.5, 55.9068 + -1.1375*x, NA)} , col = "blue") +
+  labs(x = expression(MAT~(degree~C)),
+       y = expression(MBC~(mmol~kg^-1))) ->
+  panel3
+
+## add and show meta lm
+panel3 +
+  stat_function(fun = function(x) {ifelse(x >= min(mbc_meta_longterm$MAT) & 
+                                            x <= max(mbc_meta_longterm$MAT),
+                                          184.14-12.76*x, NA)}, col = "black", lwd = 1) +
+  stat_function(fun = function(x) {ifelse(x >= min(longterm_data_del$Tannual_del) & 
+                                            x <= max(longterm_data_del$Tannual_del),
+                                          69.901-3.267*x, NA)}, col = "orange", lwd = 1) -> panel3
+
+
+# calculate and get y move intercept
+tibble(adj1 = 184.14-12.76*longterm_output$tmean[1]-(longterm_output$intercept[1]+longterm_output$slope[1]*longterm_output$tmean[1]),
+       adj2 = 184.14-12.76*longterm_output$tmean[2]-(longterm_output$intercept[2]+longterm_output$slope[2]*longterm_output$tmean[2]),
+       adj3 = 184.14-12.76*longterm_output$tmean[3]-(longterm_output$intercept[3]+longterm_output$slope[3]*longterm_output$tmean[3]),
+       adj4 = 184.14-12.76*longterm_output$tmean[4]-(longterm_output$intercept[4]+longterm_output$slope[4]*longterm_output$tmean[4]),
+       adj5 = 184.14-12.76*longterm_output$tmean[5]-(longterm_output$intercept[5]+longterm_output$slope[5]*longterm_output$tmean[5]),
+       adj6 = 184.14-12.76*longterm_output$tmean[6]-(longterm_output$intercept[6]+longterm_output$slope[6]*longterm_output$tmean[6])) -> 
+  lonterm_adj
+
+
+# panel3 +
+#   stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[1] & x <= longterm_output$tmax[1],
+#                                           longterm_output$intercept[1]+lonterm_adj$adj1 +
+#                                             longterm_output$slope[1]*x, NA)}, col = "red", lwd = 1) +
+#   stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[2] & x <= longterm_output$tmax[2],
+#                                           longterm_output$intercept[2]+lonterm_adj$adj2 +
+#                                             longterm_output$slope[2]*x, NA)}, col = "red", lwd = 1)+
+#   stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[3] & x <= longterm_output$tmax[3],
+#                                           longterm_output$intercept[3]+lonterm_adj$adj3 +
+#                                             longterm_output$slope[3]*x, NA)}, col = "red", lwd = 1)+
+#   stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[4] & x <= longterm_output$tmax[4],
+#                                           longterm_output$intercept[4]+lonterm_adj$adj4 +
+#                                             longterm_output$slope[4]*x, NA)}, col = "red", lwd = 1)+
+#   stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[5] & x <= longterm_output$tmax[5],
+#                                           longterm_output$intercept[5]+lonterm_adj$adj5 +
+#                                             longterm_output$slope[5]*x, NA)}, col = "red", lwd = 1)+
+#   stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[6] & x <= longterm_output$tmax[6],
+#                                           longterm_output$intercept[6]+lonterm_adj$adj6 +
+#                                             longterm_output$slope[6]*x, NA)}, col = "red", lwd = 1) -> panel3
+
+
+## add legend line
+panel3 +
+  # geom_segment(aes(x=-5, y=40, xend=-3.5, yend=40), col = "gray") +
+  geom_segment(aes(x=-5, y=-15, xend=-3.5, yend=-15), col = "blue") +
+  geom_segment(aes(x=-5, y=-45, xend=-3.5, yend=-45), col = "orange") +
+  geom_segment(aes(x=-5, y=-75, xend=-3.5, yend=-75), col = "black") +
+  # geom_segment(aes(x=-5, y=0, xend=-3.6, yend=0), col = "black") +
+  annotate("text", x = -3, y = c(-15,-45,-75), 
+           label = c("Patoine et al.", "Long-term across sites", "Control sites from soil warming experiment"),
+           size = c(3,3,3), hjust = 0) -> panel3
+
+# add number of year text
+longterm_data_del %>% 
+  select(PaperID, Tannual_del) %>% 
+  group_by(PaperID) %>% 
+  summarise(MAT = mean(Tannual_del)) -> n_yr_position
+lonterm_adj %>% gather() -> lonterm_adj_gather
+
+
+n_yr_position %>% 
+  mutate(y_position = coefficients(mbc_meta_longterm_lm)[1] + coefficients(mbc_meta_longterm_lm)[2]*n_yr_position$MAT) ->
+  n_yr_position
+
+# panel3 +
+#   annotate("text", x = n_yr_position$MAT,
+#            y = n_yr_position$y_position+c(5,5,5,5,5,-1),
+#            label = c("5yr","4yr","10yr","3yr","3yr","7yr"),
+#            hjust = 0, vjust = -1) -> panel3
+
+panel3 + 
+  annotate("text", x = 13, y = 70, col = "blue", hjust = 0,
+           label = expression("y="~'91.20-2.89x'~(R[adj]^2~"=0.04, p<0.01, n=762"))) +
+  annotate("text", x = 0, y = 210, col = "black", hjust = 0,
+           label = expression("y="~"184.14-12.76x"~(R[adj]^2~"=0.31, p<0.01, n=106"))) +
+  annotate("text", x = -5, y = 20, col = "orange", hjust = 0,
+           label = expression("y="~"69.90-3.27x"~(R[adj]^2~"=0.20, p=0.25, n=5"))) -> panel3
+
+panel3
+
+ggsave(here("output/figures", "Figure_X5.png"), width = 8, height = 5)
+```
+
+```{r}
+nc_raw_data %>% 
+  filter(Region == "Caribean") -> 
+  test_data
+
+lm(test_data$MBC_change ~ test_data$Year) %>% summary()
+```
+
+## add points to the lines
+```{r}
+mbc_Patoine$tmean_c %>% min()
+mbc_Patoine$tmean_c %>% max()
+
+
+tibble(Temperature = c(-6:30), MBC = 91.1992 + -2.8856*Temperature) %>% 
+  ggplot(aes(Temperature, MBC)) +
+  geom_point(alpha = 0) +
+  stat_function(fun = function(x) { 91.1992 + -2.8856*x }, col = 'blue') +
+  # stat_function(fun = function(x) {ifelse(x >= -1 & x <= 29.5, 55.9068 + -1.1375*x, NA)} , col = "blue") +
+  labs(x = expression(Temperature~(degree~C)),
+       y = expression(MBC~(mmol~kg^-1))) ->
+  panel1
+
+panel1 +
+  stat_function(fun = function(x) {ifelse(x >= min(longterm_data_del$Tannual_del) & 
+                                            x <= max(longterm_data_del$Tannual_del),
+                                          69.901-3.267*x, NA)}, col = "red", lwd = 1) -> panel1
+
+# calculate and get y move intercept
+tibble(adj1 = 69.901-3.267*longterm_output$tmean[1]-(longterm_output$intercept[1]+longterm_output$slope[1]*longterm_output$tmean[1]),
+       adj2 = 69.901-3.267*longterm_output$tmean[2]-(longterm_output$intercept[2]+longterm_output$slope[2]*longterm_output$tmean[2]),
+       adj3 = 69.901-3.267*longterm_output$tmean[3]-(longterm_output$intercept[3]+longterm_output$slope[3]*longterm_output$tmean[3]),
+       adj4 = 69.901-3.267*longterm_output$tmean[4]-(longterm_output$intercept[4]+longterm_output$slope[4]*longterm_output$tmean[4]),
+       adj5 = 69.901-3.267*longterm_output$tmean[5]-(longterm_output$intercept[5]+longterm_output$slope[5]*longterm_output$tmean[5]),
+       adj6 = 69.901-3.267*longterm_output$tmean[6]-(longterm_output$intercept[6]+longterm_output$slope[6]*longterm_output$tmean[6])) -> 
+  lonterm_adj
+
+
+panel1 +
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[1] & x <= longterm_output$tmax[1],
+                                          longterm_output$intercept[1]+lonterm_adj$adj1 +
+                                            longterm_output$slope[1]*x, NA)}, col = "orange", lwd = 1) +
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[2] & x <= longterm_output$tmax[2],
+                                          longterm_output$intercept[2]+lonterm_adj$adj2 +
+                                            longterm_output$slope[2]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[3] & x <= longterm_output$tmax[3],
+                                          longterm_output$intercept[3]+lonterm_adj$adj3 +
+                                            longterm_output$slope[3]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[4] & x <= longterm_output$tmax[4],
+                                          longterm_output$intercept[4]+lonterm_adj$adj4 +
+                                            longterm_output$slope[4]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[5] & x <= longterm_output$tmax[5],
+                                          longterm_output$intercept[5]+lonterm_adj$adj5 +
+                                            longterm_output$slope[5]*x, NA)}, col = "orange", lwd = 1)+
+  stat_function(fun = function(x) {ifelse(x >= longterm_output$tmin[6] & x <= longterm_output$tmax[6],
+                                          longterm_output$intercept[6]+lonterm_adj$adj6 +
+                                            longterm_output$slope[6]*x, NA)}, col = "orange", lwd = 1) -> panel1
+
+## add and show meta lm
+panel1 +
+  stat_function(fun = function(x) {ifelse(x >= min(mbc_data_lm$MAT) & 
+                                            x <= max(mbc_data_lm$MAT),
+                                          178.222-10.868*x, NA)}, col = "black", lwd = 1) 
+
+
+## add legend line
+panel1 +
+  # geom_segment(aes(x=-5, y=40, xend=-3.5, yend=40), col = "gray") +
+  geom_segment(aes(x=-5, y=40, xend=-3.5, yend=40), col = "blue") +
+  geom_segment(aes(x=-5, y=30, xend=-3.5, yend=30), col = "red") +
+  geom_segment(aes(x=-5, y=20, xend=-3.5, yend=20), col = "orange") +
+  # geom_segment(aes(x=-5, y=0, xend=-3.6, yend=0), col = "black") +
+  annotate("text", x = -3, y = c(40,30,20), 
+           label = c("Patoine et al.", "Long-term across sites", "Long-term by each site"),
+           size = c(3,3,3), hjust = 0) -> panel1
+
+# add number of year text
+longterm_data_del %>% 
+  select(PaperID, Tannual_del) %>% 
+  group_by(PaperID) %>% 
+  summarise(MAT = mean(Tannual_del)) -> n_yr_position
+lonterm_adj %>% gather() -> lonterm_adj_gather
+
+n_yr_position %>% 
+  mutate(y_position = longterm_output$intercept+lonterm_adj_gather$value + longterm_output$slope*n_yr_position$MAT) ->
+  n_yr_position
+
+
+panel1 + 
+  annotate("text", x = 5, y = 90, col = "blue", hjust = 0,
+           label = expression("y="~'91.20-2.89x'~(R[adj]^2~"=0.04, p<0.01"))) +
+  annotate("text", x = -5, y = 10, col = "red", hjust = 0,
+           label = expression("y="~"69.90-3.27x"~(R[adj]^2~"=0.20, p=0.25"))) -> panel1
+
+panel1
+
+```
+
+
+
+## test for randomforest modeling
+```{r}
+library(randomForest)
+mbc_metacsv_ndvi
+
+rf <- randomForest(Cmic ~ tmean + phh2o + soc + prec + land_cover + clay + sand + nitrogen + elev + ndvi,
+                   data = mbc_metacsv_ndvi,
+                   # %>% sample_frac(frac_samp)
+                   importance = TRUE, 
+                   proximity = TRUE,
+                   ntree = 200,
+                   mtry = 4,
+                   na.action = na.exclude)   
+
+plot(rf)
+importance(rf)
+varImpPlot(rf)
+
+lm(mbc_metacsv_ndvi$Cmic ~ mbc_metacsv_ndvi$tmean) %>% summary()
+lm(mbc_metacsv_ndvi$Cmic ~ mbc_metacsv_ndvi$ndvi) %>% summary()
+
+mbc_metacsv_ndvi %>% 
+  ggplot(aes(tmean, Cmic))+
+  geom_point()
+
+mbc_metacsv_ndvi %>% 
+  ggplot(aes(ndvi, Cmic))+
+  geom_point()
+
+mbc_metacsv_ndvi %>% 
+  ggplot(aes(prec, Cmic))+
+  geom_point()
+
+mbc_metacsv_ndvi %>% 
+  ggplot(aes(land_cover, Cmic))+
+  geom_point()
+```
+
+```{r}
+mbc_Patoine
+
+mbc_Patoine %>% 
+  ggplot(aes(tmean, Cmic))+
+  geom_point()
+
+mbc_Patoine %>% 
+  ggplot(aes(ndvi, Cmic))+
+  geom_point()
+```
+
+
+
+

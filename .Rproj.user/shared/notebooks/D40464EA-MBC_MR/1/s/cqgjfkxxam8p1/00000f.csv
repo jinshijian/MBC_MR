@@ -1,0 +1,7 @@
+"0","resample_lm_output130 %>% "
+"0","  ggplot(aes(outslope, slope )) +"
+"0","  geom_point() +"
+"0","  geom_smooth(method = ""lm"")"
+"2","Error in ggplot(., aes(outslope, slope)) : 
+  object 'resample_lm_output130' not found
+"

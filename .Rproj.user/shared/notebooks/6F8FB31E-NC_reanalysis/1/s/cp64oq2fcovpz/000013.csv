@@ -1,0 +1,8 @@
+"0","nc_raw_data %>% "
+"0","  ggplot(aes(x = Temp_change, y = MBC_change)) +"
+"0","  geom_point(alpha = 0.25) +"
+"0","  geom_smooth(data = nc_raw_data %>% filter(P_slope < 0.05), method = ""lm"", fill = ""pink"", col = ""red"") +"
+"0","  facet_wrap(vars(Region), ncol = 5) +"
+"0","  labs(x = expression(Temperature~change~(degree~C)),"
+"0","       y = expression(MBC~change~('%'))) +"
+"0","  theme(axis.title = element_text(size = 15))"

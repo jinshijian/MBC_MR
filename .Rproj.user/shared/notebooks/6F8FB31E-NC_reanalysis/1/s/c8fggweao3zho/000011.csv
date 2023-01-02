@@ -1,0 +1,5 @@
+"0","longterm_data_del %>% select(PaperID, MBC_c, Tannual_del) %>% "
+"0","  ggplot(aes(x = Tannual_del, y = MBC_c)) +"
+"0","  geom_point() +"
+"0","  geom_smooth(method = ""lm"") +"
+"0","  facet_wrap(.~PaperID, scales = ""free"") "

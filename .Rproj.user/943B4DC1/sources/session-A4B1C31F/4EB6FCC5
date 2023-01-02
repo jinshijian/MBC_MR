@@ -1,0 +1,26 @@
+{
+    "id": "4EB6FCC5",
+    "path": "H:/patoine/code/install_r_packages.R",
+    "project_path": "code/install_r_packages.R",
+    "type": "r_source",
+    "hash": "1237275679",
+    "contents": "",
+    "dirty": false,
+    "created": 1672555072676.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "19,54",
+        "scrollLine": "3"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1672620035,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1672620035502,
+    "read_only": false,
+    "read_only_alternatives": []
+}

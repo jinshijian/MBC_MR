@@ -1,0 +1,6 @@
+"0",""
+"0","mbc_Patoine %>% filter(tmean/10-273.15 > 0) %>% "
+"0","  ggplot(aes(x = tmean/10-273.15, y = Cmic)) + "
+"0","  geom_point() +"
+"0","  geom_smooth(method = lm)"
+"0",""

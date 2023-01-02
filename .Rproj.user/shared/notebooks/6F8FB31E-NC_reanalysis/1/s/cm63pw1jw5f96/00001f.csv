@@ -1,0 +1,2 @@
+"0",""
+"0","plot(mbc_Patoine$student_res, pch=""*"", cex=2, main=""Influential Obs by Cooks distance"") "

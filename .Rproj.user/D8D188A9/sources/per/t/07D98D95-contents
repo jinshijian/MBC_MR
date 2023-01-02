@@ -1,0 +1,246 @@
+---
+title: "MBC_MR"
+author: "Jinshi"
+date: "2022-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(patchwork)
+library(readxl)
+ggplot2::theme_set(ggplot2::theme_bw())
+library(dplyr)
+theme_set(theme_bw())
+library(tidyr)
+library(ggpubr)
+library(ggmap)
+library(maps)
+library(mapdata)
+library(leaflet)
+library(here)
+
+```
+
+
+
+```{r}
+resample_lm_output500 = read.csv("../output/resample_lm_output_500.csv")
+resample_lm_output110 = read.csv("../output/resample_lm_output_110.csv")
+
+resample_lm_output500_comb = read.csv("../output/resample_lm_output_500_combine.csv")
+
+mean(resample_lm_output500$slope_se*2)
+resample_lm_output500_comb$slope %>% mean()
+mean(resample_lm_output500_comb$slope_se*2)
+
+```
+
+
+```{r}
+Patoine_data <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=2, n_skip = 0)
+Meta_subset <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=4, n_skip = 0)
+
+Patoine_data %>% 
+  ggplot(aes(x=Mean, y=ID, colour = Study)) +
+  geom_point(alpha = 0.5) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +
+  geom_hline(yintercept = 4, linetype = "dotted", color = "black", size = 1) +
+  geom_pointrange(aes(xmin=Low, xmax = High)) +
+  scale_y_continuous(position = "left",
+                     breaks = Patoine_data$ID ,labels = Patoine_data$Study) +
+  theme(axis.title.y = element_blank()) +
+  annotate("text", x = -0.85, y = c(7,6,5,3.25,2,0.75), label = Patoine_data$Scenario, hjust = 0) +
+  # scale_x_continuous(breaks = seq(-1,0.2,0.2) ,labels = seq(-1,0.2,0.2)) +
+  # xlim(c(-1.05,0.5)) +
+  scale_color_manual(values = c("Patoine et al." = "blue", "This study" = "black")) +
+  theme(legend.position = "none") -> plot_patoine_thisstudy
+
+```
+
+
+```{r}
+resample_lm_output110 %>% 
+  ggplot(aes(x=slope, y=outslope)) +
+  geom_point() +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1.5) +
+  xlim(c(-0.4, 0.4)) +
+  theme(axis.title.x = element_blank()) +
+  # geom_smooth(method = "lm", se = FALSE)
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se)) -> plot_slope_110
+
+plot_patoine_thisstudy + plot_slope_110 +
+  plot_annotation(tag_levels = "a")
+
+resample_lm_output110$slope %>% mean()
+mean(resample_lm_output110$slope_se*2)
+
+```
+
+```{r}
+resample_lm_output110 %>% 
+  select(slope, slope_se) %>% 
+  summarize_all(.funs = mean) %>% 
+  # rename(Mean = slope) %>% 
+  transmute(Scenario = "All",
+            Study = "This study",
+            Low = slope-2*slope_se,
+            Mean = slope,
+            High = slope+2*slope_se,
+            ID = 1) %>%  
+  ggplot(aes(x=Mean, y=ID)) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = "") +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1) +
+  geom_point()+
+  geom_pointrange(aes(xmin=Low, xmax = High)) +
+  xlim(c(-0.4, 0.4)) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) -> resample_output110_sum
+
+plot_slope_110 + resample_output110_sum +
+  plot_layout(ncol = 1, heights = c(6,1)) +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag.position = c(0, 1.01),
+        plot.tag = element_text(size = 12, hjust = -2, vjust = 0, face = "bold"))
+
+# ggsave(here("output/figures", "slope_110.png"), width = 5, height = 6)
+```
+
+
+
+```{r}
+# panel 1 ---------------------------------------------------------------------------------------
+resample_lm_output500 %>% 
+  ggplot(aes(x=slope, y=outslope)) +
+  geom_point(alpha = 0.5) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope)) +
+  geom_vline(xintercept = 0, linetype = "dashed",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se)) +
+  xlim(c(-0.2, 0.2)) +
+  scale_y_continuous(position = "right", breaks = seq(-1.5,-3.5,-0.5)) +
+  theme(axis.title.y = element_blank()) +
+  theme(axis.title.x = element_blank()) -> panel1
+
+# panel 2 ---------------------------------------------------------------------------------------
+Patoine_data %>% filter(Scenario == "All" & Study == "Patoine et al.") %>% mutate(ID = 1) -> Patoine_sum
+bind_rows(resample_lm_output500 %>% 
+  select(slope, slope_se) %>% 
+  summarize_all(.funs = mean) %>% 
+  # rename(Mean = slope) %>% 
+  transmute(Scenario = "All",
+            Study = "This study",
+            Low = slope-2*slope_se,
+            Mean = slope,
+            High = slope+2*slope_se,
+            ID = 2),
+  Patoine_sum) %>%  
+  ggplot(aes(x=Mean, y=ID)) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = "") +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=c(-0.08, -0.18), xmax = High)) +
+  geom_pointrange(aes(xmin=-0.2, xmax = -0.19), data = Patoine_sum) +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.18, yend=1.25), col = "black") +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.19, yend=1), col = "black") +
+  geom_segment(aes(x=-0.18, y=1.25, xend=-0.18, yend=1), col = "black") +
+  xlim(c(-0.2, 0.2)) + ylim(c(0.5, 2.5)) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  annotate("text", x = 0.05, y = 1, label = "Patoine et al.", hjust = 0) +
+  annotate("text", x = 0.05, y = 2, label = "This study", hjust = 0) -> panel2
+
+
+# panel 3 ---------------------------------------------------------------------------------------
+resample_lm_output500_comb %>% 
+  ggplot(aes(x=slope, y=outslope)) +
+  geom_point() +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dashed",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se)) +
+  xlim(c(-0.2, 0.2)) +
+  scale_y_continuous(position = "left", breaks = c(-6:-3),labels = c("-6.0","-5.0","-4.0","-3.0")) +
+  theme(axis.title.x = element_blank()) -> panel3
+
+
+# panel 4 ---------------------------------------------------------------------------------------
+bind_rows(resample_lm_output500_comb %>% 
+  select(slope, slope_se) %>% 
+  summarize_all(.funs = mean) %>% 
+  # rename(Mean = slope) %>% 
+  transmute(Scenario = "All",
+            Study = "This study",
+            Low = slope-2*slope_se,
+            Mean = slope,
+            High = slope+2*slope_se,
+            ID = 2),
+  Patoine_data %>% filter(Scenario == "All" & Study == "Patoine et al.") %>% mutate(ID = 1)) %>% 
+  ggplot(aes(x=Mean, y=ID)) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = "") +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=c(-0.096, -0.18), xmax = High)) +
+  geom_pointrange(aes(xmin=-0.2, xmax = -0.19), data = Patoine_sum) +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.18, yend=1.25), col = "black") +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.19, yend=1), col = "black") +
+  geom_segment(aes(x=-0.18, y=1.25, xend=-0.18, yend=1), col = "black") +
+  xlim(c(-0.2, 0.2)) + ylim(c(0.5, 2.5)) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  annotate("text", x = 0.05, y = 1, label = "Patoine et al.", hjust = 0) +
+  annotate("text", x = 0.05, y = 2, label = "This study", hjust = 0) -> panel4
+
+panel1 + panel3 + panel2 + panel4 +
+  plot_layout(ncol = 2, heights = c(5,1)) +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag.position = c(0, 1.01),
+        plot.tag = element_text(size = 12, hjust = -2, vjust = 0, face = "bold")) 
+
+# ggsave(here("output/figures", "slope_500.png"), width = 8, height = 6)
+```
+
+
+
+
+```{r}
+resample_lm_output130 %>% 
+  ggplot(aes(outslope, slope )) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# ------------------------------------------- plot slope
+resample_lm_output130 %>% 
+  ggplot(aes(slope, outslope)) +
+  geom_point() +
+  # geom_smooth(method = "lm") +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1.5) +
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se))
+
+ggsave(here("output/figures", "slope_130.png"),
+       width = 6, height = 8)
+  
+lm(resample_lm_output130$slope ~ resample_lm_output130$outslope) %>% summary()
+
+resample_lm_output500 = read.csv("output/resample_lm_output_500.csv")
+lm(resample_lm_output500$slope ~ resample_lm_output500$outslope) %>% summary()
+```
+

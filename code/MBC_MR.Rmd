@@ -1,0 +1,496 @@
+---
+title: "MBC_MR"
+author: "Jinshi"
+date: "2022-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(patchwork)
+library(readxl)
+ggplot2::theme_set(ggplot2::theme_bw())
+library(dplyr)
+theme_set(theme_bw())
+library(tidyr)
+library(ggpubr)
+library(ggmap)
+library(maps)
+library(mapdata)
+library(leaflet)
+library(here)
+
+```
+
+## Creat functions
+```{r creat functions}
+# function for reading data from excel
+read_xlsx <- function(x, n_sheet, n_skip) read_excel(file.path(x), sheet = n_sheet, skip = n_skip)
+
+# creat function do linear regression for each region
+lm_model <- function(sdata, var_region){
+  lm <- lm(sdata$MBC_change ~ sdata$Temp_change)
+  lm_sum <- summary(lm)
+  intercept <- lm_sum$coefficients[1,1]
+  slope <- lm_sum$coefficients[2,1]
+  p_slope <- lm_sum$coefficients[2,4]
+  tibble(region = var_region, 
+         intercept = intercept,
+         slope = slope,
+         p_slope = round(p_slope, 3)) -> out
+  return (out)  }
+
+# plot world map
+word_bkgd <- function (sdata) {
+  ggplot(data = sdata) + 
+    # geom_polygon(aes(x = long, y = lat , fill = region , group = group, alpha = 0.1), color = "white") + 
+    geom_polygon(aes(x = long, y = lat, group = group, alpha = 0.1), color = "white", fill = "gray") + 
+    coord_fixed(1.3) +
+    theme(axis.text.y   = element_text(size = 12),
+          axis.text.x   = element_text(size = 12),
+          axis.title.y   = element_text(size = 13, margin = margin(t = 0, r = 12, b = 0, l = 0)),
+          axis.title.x   = element_text(size = 13, margin = margin(t = 12, r = 0, b = 0, l = 0)),
+          panel.background = element_blank(),
+          panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(colour = "black"),
+          panel.border = element_rect(colour = "black", fill = NA, size = 1.25))+
+    theme(legend.position = "none")+
+    scale_x_continuous(name = "Longitude", breaks = seq(-180, 180, 30),
+                       labels = seq(-180, 180, 30)) +
+    scale_y_continuous(name = "Latitude", limits = c(-60, 90), breaks = seq(-90, 90, 15),
+                       labels = seq(-90,90,15))
+}
+
+# creat function do linear regression for each longterm experiment
+longterm_model <- function(sdata, var_study){
+  lm <- lm(sdata$MBC_c ~ sdata$Tannual_del)
+  lm_sum <- summary(lm)
+  intercept <- lm_sum$coefficients[1,1]
+  slope <- lm_sum$coefficients[2,1]
+  slope_se <- lm_sum$coefficients[2,2]
+  p_slope <- lm_sum$coefficients[2,4]
+  tibble(Study = var_study, 
+         intercept = intercept,
+         slope = slope,
+         slope_se = slope_se,
+         p_slope = round(p_slope, 3),
+         tmin = min(sdata$Tannual_del) %>% round(2),
+         tmax = max(sdata$Tannual_del) %>% round(2)) -> out
+  return (out)}
+
+```
+
+
+```{r load data}
+resample_lm_output500 = read.csv("../output/resample_lm_output_500.csv")
+resample_lm_output110 = read.csv("../output/resample_lm_output_110.csv")
+
+resample_lm_output500_comb = read.csv("../output/resample_lm_output_500_combine.csv")
+
+mean(resample_lm_output500$slope_se*2)
+resample_lm_output500_comb$slope %>% mean()
+mean(resample_lm_output500_comb$slope_se*2)
+
+Patoine_data <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=2, n_skip = 0)
+Meta_subset <- read_xlsx("../rawdata/Patoine_data_figure5.xlsx", n_sheet=4, n_skip = 0)
+
+mbc_Patoine <- read_excel("../rawdata/glc_cmic_data.xlsx", sheet = 2, skip = 0)
+mbc_Patoine %>% 
+  mutate(tmean_c = tmean/10-273.15) -> mbc_Patoine
+
+mbc_metadata <- read_excel("../rawdata/MBC_metadata.xlsx", sheet=1, skip = 0)
+mbc_metadata %>% 
+  mutate(
+    MBC_ROM = log(MBC_t/MBC_c)) -> mbc_metadata
+
+# longterm_data_del <- drake::readd(longterm_data_del)
+longterm_data_del <- read.csv('../output/longterm_data_del.csv')
+mbc_metacsv_ndvi = read.csv("../rawdata/mbc_meta_final2.csv")
+
+```
+
+
+## spatial map
+```{r world map, fig.height=4, fig.width=4}
+# Base map - word map
+worldMap <- map_data(map = "world")
+basemap <- word_bkgd(worldMap)
+
+# plot meta_site
+mbc_metadata %>% 
+  dplyr::select(Latitude, Longitude) %>% 
+  na.omit() %>% 
+  count(Latitude, Longitude) ->
+  meta_count
+
+## add site legend
+size_legend <- tibble(x = rep(170, 4),
+                      y = c(45,30,15,0),
+                      size = c(2,4,6,8))
+
+
+# plot meta sites
+basemap +
+  geom_point(data = meta_count, aes(x = meta_count$Longitude, y = meta_count$Latitude), 
+               color = "black", shape = 1, size = meta_count$n, alpha = 1, stroke = 1) +
+  geom_point(data = mbc_metadata %>% filter(Paper %in% c(68,69)),
+             aes(x = Longitude, y = Latitude),
+             color = "blue", shape = 16, size = 3, alpha = 1) +
+  geom_point(data = longterm_data_del, aes(x = Longitude, y = Latitude),
+             color = "red", shape = 1, size = 2, alpha = 0.75, stroke = 2) +
+  # legend
+  geom_point(data = tibble(x = rep(-170, 3), y = c(-25, -40, -55), size = 1),
+             aes(x, y, size = c(3,3,3))
+             , shape = c(1, 16, 1)
+             , color = c("black", "blue", "red"), alpha = 1, stroke = 1) +
+  annotate("text", x = -160, y = c(-25, -40, -55), 
+           label = c("Warming experiment", "Within Patoine et al.", "Long-term sites"),
+           size = c(3,3,3), hjust = 0) +
+  geom_point(data = size_legend, aes(x, y, size = size)
+             , shape = c(1, 1, 1, 1)
+             , color = c("black"), alpha = 1, stroke = 1) +
+  annotate("text", x = 180, y = c(45,30,15,0), 
+           label = c("2", "4", "6", "8"),
+           size = c(3,3,3,3), hjust = 0) +
+  annotate("text", y=c(36.13,58.44,50.12,42.45,-15.6,-37.8),
+           x=c(137.42,-93.48,7.31,116.67,-47.6,175.25),
+           label = c("LT1","LT2","LT3","LT4","LT5","LT6"),
+           col = "red", vjust = -1) -> site_meta
+
+site_meta
+
+```
+
+## get linear model regression coeffients
+```{r get linear model regression coeffients}
+bind_rows(
+  longterm_model(longterm_data_del %>% filter(PaperID == 68), "68"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 69), "69"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 70), "70"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 71), "71"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 72), "72"),
+  longterm_model(longterm_data_del %>% filter(PaperID == 73), "73")) -> longterm_output
+
+longterm_output %>% 
+  mutate(tmean = (tmin + tmax)/2) -> longterm_output
+
+longterm_output$pch <- c(16,16,16,16,16,16)
+longterm_output$col <- rep("red",6)
+longterm_output$Low <- longterm_output$slope-2*longterm_output$slope_se
+longterm_output$High <- longterm_output$slope+2*longterm_output$slope_se
+longterm_output$Study2 <- c(73:68)
+
+longterm_output
+```
+
+## plot Figure 1
+## replot Patoine et al 2022 figure 5 (Figure 1-version2) use ggplot
+```{r}
+# panel 1 ---------------------------------------------------------------------------------------
+Meta_subset$ID[6] = 1.75
+Meta_subset %>% 
+  ggplot(aes(x=Mean, y=ID)) +
+  geom_point(shape = c(16,16,16,16,16,15), col = c("gray","gray","gray","gray","gray","black"))+
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = 'LN (response ratio)', y = "") +
+  geom_vline(xintercept = 0, linetype = 2, color = "black", size = 1) +
+  # geom_hline(yintercept = c(2,1), linetype = 1, color = "black", size = 0.5) +
+  annotate("rect", xmin = -0.4, xmax = 0.3, ymin = 1.25, ymax = 2.25, alpha = 0.0) +
+  geom_pointrange(aes(xmin=Low, xmax = High), col = "black", alpha = 0.5) +
+  geom_hline(yintercept = 2.25, linetype = 3, color = "black", size = 0.5)+
+    # xlim(c(-0.2, 0.2)) +
+  geom_point(aes(x=-0.01005034,y=1.75), shape = 15, size = 3.5)+
+  scale_y_continuous(position = "left", breaks = c(Meta_subset$ID,1), labels = c(Meta_subset$Subgroup,"")) +
+  theme(axis.title.y = element_blank())  -> panel_meta
+
+# panel 2 ---------------------------------------------------------------------------------------
+xmin <- c(longterm_output$Low[1:5],-0.65)
+longterm_output %>% 
+  ggplot(aes(x=slope, y=Study2)) +
+  geom_point(alpha = 0.5, col = "red") +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1)), y = "") +
+  geom_vline(xintercept = 0, linetype = 2,
+             color = "black", size = 1) +
+  geom_pointrange(aes(xmin=xmin,  xmax = High), col = "red") +
+  geom_segment(aes(x=-0.8, y=68, xend=-0.70, yend=68), col = "red") +
+  geom_segment(aes(x=-0.7, y=67.5, xend=-0.7, yend=68), col = "red") +
+  geom_segment(aes(x=-0.65, y=68.5, xend=-0.65, yend=68), col = "red") +
+  geom_segment(aes(x=-0.7, y=67.5, xend=-0.65, yend=68.5), col = "red") +
+  # xlim(c(-0.8, 0.3)) +
+  scale_y_continuous(position = "right",
+                     breaks = c(68:73) ,labels = c("LT6", "LT5", "LT4", "LT3", "LT2", "LT1")) +
+  theme(axis.title.y = element_blank()) -> panel_LT
+
+panel_meta
+panel_LT
+
+site_meta + (panel_meta + panel_LT) +
+  plot_layout(heights = c(2, 1.5)) +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag.position = c(0.02, 1.01), plot.tag = element_text(vjust = 2)) &
+  theme(plot.tag = element_text(size = 15, hjust = -2, vjust = 0, face = "bold"))
+
+# cowplot::plot_grid(panel_LT, panel_meta, labels = c("b", "c"))
+
+# ggsave(here("output/figures", "site_meta_longterm.png"), width = 8, height = 8)
+
+```
+
+
+## plot Figure 2
+```{r resample of patoine vs combine}
+# panel 1 ---------------------------------------------------------------------------------------
+resample_lm_output500 %>% 
+  ggplot(aes(x=slope, y=outslope)) +
+  geom_point(alpha = 0.5) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~('%'~yr^-1)),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dashed",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se)) +
+  xlim(c(-0.2, 0.2)) +
+  scale_y_continuous(position = "left", breaks = seq(-1.5,-3.5,-0.5)) -> panel1
+# +  theme(axis.title.x = element_blank()) 
+
+# panel 2 ---------------------------------------------------------------------------------------
+Patoine_data %>% filter(Scenario == "All" & Study == "Patoine et al.") %>% mutate(ID = 1) -> Patoine_sum
+bind_rows(resample_lm_output500 %>% 
+  select(slope, slope_se) %>% 
+  summarize_all(.funs = mean) %>% 
+  # rename(Mean = slope) %>% 
+  transmute(Scenario = "All",
+            Study = "This study",
+            Low = slope-2*slope_se,
+            Mean = slope,
+            High = slope+2*slope_se,
+            ID = 2),
+  Patoine_sum) %>%  
+  ggplot(aes(x=Mean, y=ID)) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~('%'~yr^-1)),
+       y = "") +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=c(-0.08, -0.18), xmax = High)) +
+  geom_pointrange(aes(xmin=-0.2, xmax = -0.19), data = Patoine_sum) +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.18, yend=1.25), col = "black") +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.19, yend=1), col = "black") +
+  geom_segment(aes(x=-0.18, y=1.25, xend=-0.18, yend=1), col = "black") +
+  xlim(c(-0.2, 0.2)) + ylim(c(0.5, 2.5)) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  annotate("text", x = 0.05, y = 1, label = "Patoine et al.", hjust = 0) +
+  annotate("text", x = 0.05, y = 2, label = "This study", hjust = 0) -> panel2
+
+
+# panel 3 ---------------------------------------------------------------------------------------
+resample_lm_output500_comb %>% 
+  ggplot(aes(x=slope, y=outslope)) +
+  geom_point() +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~('%'~yr^-1)),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dashed",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se)) +
+  xlim(c(-0.2, 0.2)) +
+  scale_y_continuous(position = "left", breaks = c(-6:-3),labels = c("-6.0","-5.0","-4.0","-3.0")) -> panel3
+
+
+# panel 4 ---------------------------------------------------------------------------------------
+bind_rows(resample_lm_output500_comb %>% 
+  select(slope, slope_se) %>% 
+  summarize_all(.funs = mean) %>% 
+  # rename(Mean = slope) %>% 
+  transmute(Scenario = "All",
+            Study = "This study",
+            Low = slope-2*slope_se,
+            Mean = slope,
+            High = slope+2*slope_se,
+            ID = 2),
+  Patoine_data %>% filter(Scenario == "All" & Study == "Patoine et al.") %>% mutate(ID = 1)) %>% 
+  ggplot(aes(x=Mean, y=ID)) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~('%'~yr^-1)),
+       y = "") +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1) +
+  geom_pointrange(aes(xmin=c(-0.096, -0.18), xmax = High)) +
+  geom_pointrange(aes(xmin=-0.2, xmax = -0.19), data = Patoine_sum) +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.18, yend=1.25), col = "black") +
+  geom_segment(aes(x=-0.19, y=0.75, xend=-0.19, yend=1), col = "black") +
+  geom_segment(aes(x=-0.18, y=1.25, xend=-0.18, yend=1), col = "black") +
+  xlim(c(-0.2, 0.2)) + ylim(c(0.5, 2.5)) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+  annotate("text", x = 0.05, y = 1, label = "Patoine et al.", hjust = 0) +
+  annotate("text", x = 0.05, y = 2, label = "This study", hjust = 0) -> panel4
+
+panel1 + panel3 + panel2 + panel4 +
+  plot_layout(nrow = 2, heights = c(5,1)) +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag.position = c(0, 1.01),
+        plot.tag = element_text(size = 12, hjust = -2, vjust = 0, face = "bold")) 
+
+ 
+
+# ggsave(here("output/figures", "slope_500_v3.png"), width = 8, height = 6.5)
+```
+
+
+
+## Plot FigrueS 2 
+```{r panel 3}
+# plot MBC change vs warming magnitude
+lm(mbc_metadata$MBC_ROM ~ mbc_metadata$Magnitude_W + I(mbc_metadata$Magnitude_W^2)) %>% summary() -> meta_lm_summary
+tibble(a = meta_lm_summary$coefficients[1,1],
+       b = meta_lm_summary$coefficients[2,1],
+       c = meta_lm_summary$coefficients[3,1]) -> meta_nls_coef
+
+# y_max appear at
+mbc_metadata %>% 
+  ggplot(aes(Magnitude_W, MBC_ROM)) +
+  geom_point(aes(size = MBC_c_n), alpha = 0.5) +
+  geom_point(data = mbc_metadata %>% filter(Paper %in% c(68,69)),
+             aes(size = MBC_c_n), alpha = 1.0, col = "blue") +
+  geom_point(data = mbc_metadata %>% filter(Paper %in% c(0)),
+             aes(size = MBC_c_n), alpha = 1, col = "black") +
+  # geom_smooth() +
+  stat_function(fun = function(x) {meta_nls_coef$a + meta_nls_coef$b*x + meta_nls_coef$c*x^2},
+                col = "black", size = 2)+
+  geom_vline(xintercept = -meta_nls_coef$b/(2*meta_nls_coef$c), linetype=3, 
+                color = "red", size=1) +
+  scale_y_continuous(labels = function(x) sprintf("%.2f", x)) +
+  labs(x = expression(Warming~magnitude~(degree~C)),
+       y = expression(LN~(RR))) +
+  theme(legend.title=element_blank(),
+        panel.background = element_rect(fill='transparent'),
+        plot.background = element_rect(fill='transparent', color=NA),
+        legend.background = element_rect(fill='transparent'), #transparent legend bg
+        legend.position = c(0.80, 0.775)) +
+  annotate("text", x = 1, y = -0.9, col = "black", hjust = 0,
+           label = expression("y="~"-0.38+0.42x-0.08x"^2~(R[adj]^2~"=0.23, p<0.01"))) -> panel_quadratic
+
+## test simple liear regression and plot
+mbc_Patoine$tmean_c %>% min()
+mbc_Patoine$tmean_c %>% max()
+lm(mbc_Patoine$Cmic ~ mbc_Patoine$tmean_c) %>%summary()
+
+mbc_Patoine %>% 
+  ggplot(aes(tmean_c, Cmic)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = expression(Mean~annual~temperature~(degree~C)),
+       y = expression(MBC~(mmol~kg^-1))) +
+  annotate("text", x = -2.5, y = 720, col = "blue", hjust = 0,
+           label = expression("y="~'91.20-2.89x'~(R[adj]^2~"=0.04, p<0.01, n=762"))) -> panel_slr_v3
+
+
+panel_quadratic/panel_slr_v3 +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag = element_text(size = 20, hjust = -2, vjust = 0, face = "bold"))
+
+# ggsave(here("output/figures", "Figure_quadratic_v2.png"), width = 8, height = 8)
+```
+
+
+```{r patoine vs this study comparison}
+# patoine summary plot
+Patoine_data %>% 
+  ggplot(aes(x=Mean, y=ID, colour = Study)) +
+  geom_point(alpha = 0.5) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +
+  geom_hline(yintercept = 4, linetype = "dotted", color = "black", size = 1) +
+  geom_pointrange(aes(xmin=Low, xmax = High)) +
+  scale_y_continuous(position = "left",
+                     breaks = Patoine_data$ID ,labels = Patoine_data$Study) +
+  theme(axis.title.y = element_blank()) +
+  annotate("text", x = -0.85, y = c(7,6,5,3.25,2,0.75), label = Patoine_data$Scenario, hjust = 0) +
+  # scale_x_continuous(breaks = seq(-1,0.2,0.2) ,labels = seq(-1,0.2,0.2)) +
+  # xlim(c(-1.05,0.5)) +
+  scale_color_manual(values = c("Patoine et al." = "blue", "This study" = "black")) +
+  theme(legend.position = "none") -> plot_patoine_thisstudy
+
+# this study plot
+resample_lm_output110 %>% 
+  ggplot(aes(x=slope, y=outslope)) +
+  geom_point() +
+  labs(x = expression(Rate~of~change~('%'~yr^-1)),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1.5) +
+  xlim(c(-0.4, 0.4)) +
+  # theme(axis.title.x = element_blank()) +
+  # geom_smooth(method = "lm", se = FALSE)
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se)) -> plot_slope_110
+
+plot_patoine_thisstudy + plot_slope_110 +
+  plot_annotation(tag_levels = "a")
+
+resample_lm_output110$slope %>% mean()
+mean(resample_lm_output110$slope_se*2)
+
+```
+
+## Plot FigrueS 6 
+```{r this study plot}
+resample_lm_output110 %>% 
+  select(slope, slope_se) %>% 
+  summarize_all(.funs = mean) %>% 
+  # rename(Mean = slope) %>% 
+  transmute(Scenario = "All",
+            Study = "This study",
+            Low = slope-2*slope_se,
+            Mean = slope,
+            High = slope+2*slope_se,
+            ID = 1) %>%  
+  ggplot(aes(x=Mean, y=ID)) +
+  # geom_smooth(method = "lm", se = FALSE) +
+  labs(x = expression(Rate~of~change~('%'~yr^-1)),
+       y = "") +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1) +
+  geom_point()+
+  geom_pointrange(aes(xmin=Low, xmax = High)) +
+  xlim(c(-0.4, 0.4)) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) -> resample_output110_sum
+
+plot_slope_110 + resample_output110_sum +
+  plot_layout(ncol = 1, heights = c(6,1)) +
+  plot_annotation(tag_levels = 'a') &
+  theme(plot.tag.position = c(0, 1.01),
+        plot.tag = element_text(size = 12, hjust = -2, vjust = 0, face = "bold"))
+
+# ggsave(here("output/figures", "slope_110.png"), width = 5, height = 6)
+```
+
+
+
+```{r test code}
+resample_lm_output110 %>% 
+  ggplot(aes(outslope, slope )) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# ------------------------------------------- plot slope
+resample_lm_output110 %>% 
+  ggplot(aes(slope, outslope)) +
+  geom_point() +
+  # geom_smooth(method = "lm") +
+  labs(x = expression(Rate~of~change~"(%)"),
+       y = expression(Linear~model~slope~(mmol~kg^-1~degree~C^-1))) +
+  geom_vline(xintercept = 0, linetype = "dotted",
+             color = "red", size = 1.5) +
+  geom_pointrange(aes(xmin=slope - 2*slope_se, xmax = slope + 2*slope_se))
+
+  
+lm(resample_lm_output110$slope ~ resample_lm_output110$outslope) %>% summary()
+
+lm(resample_lm_output500$slope ~ resample_lm_output500$outslope) %>% summary()
+```
+

@@ -1,0 +1,8 @@
+"0","class(mbc_data$Magnitude)"
+"1","[1]"
+"1"," ""factor"""
+"1","
+"
+"0","mbc_data %>%  "
+"0","  filter(Magnitude == ""(4,5]"") %>% "
+"0","  select(Paper) %>% unique()"

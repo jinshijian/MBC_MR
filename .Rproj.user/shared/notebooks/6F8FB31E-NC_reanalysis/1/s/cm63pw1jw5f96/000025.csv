@@ -1,0 +1,2 @@
+"0",""
+"0","mbc_Patoine %>% filter(cookd < 4*mean(cookd, na.rm=T)) %>% filter(abs(student_res) < 2)"
