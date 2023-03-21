@@ -75,9 +75,11 @@ ggplot2::theme_set(ggplot2::theme_bw())
 
 # scenario 1: randomly resample 100 times (n=500) from patoine (n=762)
 # scenario 2: randomly resample 100 times (n=500) from combine (n=762+106)
+# need to update the data and output folder 
+scenario_number = 2 # need update based on scenario
 
 scenario_file <- c("resampled_cmic_500_patoine.csv", "resampled_cmic_500_combined.csv")
-folder_file <- c("derived/resampe500_patoine_all", "derived/resampe500_combine")
+folder_file <- c("derived/resampe500_patoine", "derived/resampe500_combine")
 mask_file <- c("derived/mask_patoine_500/", "derived/mask_combine_500/")
 
 # *************************************************************************************
@@ -88,9 +90,6 @@ outputs = read.csv(paste0("output/", scenario_file[scenario_number])) %>%
 # need update
 folder_name <- paste0(folder_file[scenario_number], "/resample")
 folder_fjoin <- c("derived/resampe500_patoine_fjoin", "derived/resampe500_combine_fjoin") 
-
-# need to update the data and output folder 
-scenario_number = 1 # need update based on scenario
 
 # *************************************************************************************
 
@@ -107,7 +106,7 @@ cl <- makeCluster(6, outfile = "")
 registerDoParallel(cl)
 
 # for (i in 1){
-for (i in 1:output_number[1:2]){
+for (i in output_number[1:2]){
   predictors <- glc_layers() %>% unname
   cmic = outputs %>% filter(run_number == i)
   set.seed(202)
@@ -216,7 +215,8 @@ stopCluster(cl)
 
 
 # ******************************************************************************
-# for scenario 2, go to line 84, and change scenario_number to 2
+# for scenario 2, go to line 79, and change scenario_number to 2
+# then run through the code again
 # ******************************************************************************
 
 

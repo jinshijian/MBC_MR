@@ -1,8 +1,7 @@
 
-
-#*****************************************************************************************
-# Calculate and compare temporal trends of all predictions ---------------------------
-#*****************************************************************************************
+#*******************************************************************************
+# Calculate and compare temporal trends of all predictions -----------------
+#*******************************************************************************
 library(raster)
 library(tools)
 library(sf)
@@ -23,9 +22,10 @@ library(gt)
 # library(glcpck)
 # install.packages('qdapRegex')
 library(qdapRegex)
+source(here::here("code/functions.R"))
 
 # par setup 
-cl <- makeCluster(5, outfile = "")
+cl <- makeCluster(6, outfile = "")
 registerDoParallel(cl)
 
 # calculate cstocks
@@ -100,19 +100,41 @@ temporal_trend <- function(sdata, var_scenario) {
   outpt_slope = tibble(scenario = var_scenario,
                        slope = lm_slope,
                        slope_se = lm_slope_se,
-                       slope_p = lm_slope_p)
+                       slope_p = lm_slope_p,
+                       folder = sdata[1])
   
   return(outpt_slope)
 }
 
 
-list.files(here("derived/resampe500_combine_all"), pattern = c("resample"), full.names = TRUE) -> folder_list
-# folder_list = folder_list[4:103]
-# temporal_trend(pred_files, "fixed_climate") -> resample_lm_output
+# need update baseed on scenario
+# note that vmask_output are outputs for runs with different mask
+vmask_output <- c("derived/resampe500_patoine", "derived/resampe500_combine")
+# fjoin_output are outputs for runs with uniform full joined mask
+fjoin_output <- c("derived/resampe500_patoine_fjoin", "derived/resampe500_combine_fjoin")
+
+scenario_file <- c("resampled_cmic_500_patoine.csv", "resampled_cmic_500_combined.csv")
+folder_file <- c("derived/resampe500_patoine", "derived/resampe500_combine")
+
+
+
+
+
+
+#*******************************************************************************
+# scenario 1: patoine ---------------------------
+#*******************************************************************************
+scenario_number <- 1
+
+# each resample run with diffirent mask ****************************************
+list.files(here(vmask_output[scenario_number]),  
+           pattern = c("resample"), full.names = TRUE) -> folder_list 
+
 resample_lm_output = tibble(scenario = NA,
                             slope = NA,
                             slope_se = NA,
-                            slope_p = NA)
+                            slope_p = NA,
+                            folder = NA)
 
 for (i in 1:length(folder_list)){
   list.files(folder_list[i], pattern = c("_all_.+rds"), full.names = TRUE) -> pred_files
@@ -124,52 +146,248 @@ for (i in 1:length(folder_list)){
 #end----------------------------------------------------------
 stopCluster(cl)
 
-#*****************************************************************************************
-# join and get run_number ---------------------------
-#*****************************************************************************************
 
-resample_lm_output[2:101,] %>% 
+# join and get run_number ---------------------------------------------
+
+resample_lm_output %>% 
+  filter(!is.na(slope)) %>% 
   ggplot(aes(x = slope)) +
   geom_histogram(bins = 30, color="black", fill="white")
 
 mean(resample_lm_output$slope, na.rm = T)
 
+resample_lm_output2 <- resample_lm_output %>% filter(!is.na(slope))
+resample_lm_output2$folder 
 
 
-resample_lm_output2 <- resample_lm_output[2:101,]
-resample_lm_output2$folder = folder_list
+outputs = read.csv(paste0("output/", scenario_file[scenario_number])) %>%  # need update
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
 
-tibble(run_number = c(1:100), outslope = outputs$Slope %>% unique()) -> optput_lm_slope
+# tibble(run_number = c(1:100), outslope = outputs$Slope %>% unique()) -> optput_lm_slope
 
+outputs %>% 
+  mutate(outslope = Slope) %>% 
+  select(run_number, outslope) %>% 
+  unique() -> optput_lm_slope
 
-rm_between(resample_lm_output2$folder, 'F:/patoine/derived/resampe500_combine/resample',
+# need update
+
+rm_between(resample_lm_output2$folder, here(paste0(folder_file[scenario_number]),"resample"),
            '_pred_all_vars', extract=TRUE)
 
-resample_lm_output2$run_number = unlist(rm_between(resample_lm_output2$folder, 'F:/patoine/derived/resampe500_combine/resample',
-                                                     '_pred_all_vars', extract=TRUE))
+resample_lm_output2$run_number = unlist(rm_between(resample_lm_output2$folder,
+                                                   here(paste0(folder_file[scenario_number]),"resample"),
+                                                   '_pred_all_vars', extract=TRUE))
 
 resample_lm_output2$run_number <- as.numeric(resample_lm_output2$run_number)
-
-outputs1 = read.csv("output/resampled_cmic.csv") %>% 
-  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S")))
-
-
 
 resample_lm_output2 %>%  
   left_join(optput_lm_slope, by = "run_number") -> resample_lm_output2
 
-# write.csv(resample_lm_output2, "output/resample_lm_output_500_combine.csv", row.names = FALSE)
-
-#*****************************************************************************************
-# the end ---------------------------
-#*****************************************************************************************
+# need update based on scenario
+# write.csv(resample_lm_output2, "output/resample_lm_output_500_patoine.csv", row.names = FALSE) 
 
 
 
-# scenario 2: rasample (n=500) 200 times with combined data
-# need to update the data and output folder 
-# *************************************************************************************
-# list.files(here("derived/resampe110_outputs_all"), pattern = c("resample"), full.names = TRUE) -> folder_list 
-# write.csv(resample_lm_output2, "output/resample_lm_output_110.csv", row.names = FALSE)
-# *************************************************************************************
+# all resample runs with a same mask ******************************************
+list.files(here(fjoin_output[scenario_number]),  
+           pattern = c("resample"), full.names = TRUE) -> folder_list 
+
+resample_lm_output = tibble(scenario = NA,
+                            slope = NA,
+                            slope_se = NA,
+                            slope_p = NA,
+                            folder = NA)
+
+for (i in 1:length(folder_list)){
+  list.files(folder_list[i], pattern = c("_all_.+rds"), full.names = TRUE) -> pred_files
+  temporal_trend(pred_files, "fixed_no_var") -> resample_lm_output_i
+  resample_lm_output = bind_rows(resample_lm_output, resample_lm_output_i)
+  print(paste0("resample", "**************", i))
+}
+
+#end----------------------------------------------------------
+stopCluster(cl)
+
+
+# join and get run_number ---------------------------------------------
+
+resample_lm_output %>% 
+  filter(!is.na(slope)) %>% 
+  ggplot(aes(x = slope)) +
+  geom_histogram(bins = 30, color="black", fill="white")
+
+mean(resample_lm_output$slope, na.rm = T)
+
+resample_lm_output2 <- resample_lm_output %>% filter(!is.na(slope))
+resample_lm_output2$folder 
+
+
+outputs = read.csv(paste0("output/", scenario_file[scenario_number])) %>%  # need update
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
+
+# tibble(run_number = c(1:100), outslope = outputs$Slope %>% unique()) -> optput_lm_slope
+
+outputs %>% 
+  mutate(outslope = Slope) %>% 
+  select(run_number, outslope) %>% 
+  unique() -> optput_lm_slope
+
+# need update
+
+rm_between(resample_lm_output2$folder, here(paste0(folder_file[scenario_number], "_fjoin"),"resample"),
+           '_pred_all_vars', extract=TRUE)
+
+resample_lm_output2$run_number = 
+  unlist(rm_between(resample_lm_output2$folder,
+                    here(paste0(folder_file[scenario_number], "_fjoin"),"resample"),
+                    '_pred_all_vars', extract=TRUE))
+
+resample_lm_output2$run_number <- as.numeric(resample_lm_output2$run_number)
+
+resample_lm_output2 %>%  
+  left_join(optput_lm_slope, by = "run_number") -> resample_lm_output2
+
+# need update based on scenario
+# write.csv(resample_lm_output2, "output/resample_lm_output_500_patoine_fjoin.csv", row.names = FALSE)
+
+
+
+
+
+
+
+#*******************************************************************************
+# scenario 2: combine ---------------------------
+#*******************************************************************************
+scenario_number <- 2
+
+# each resample run with diffirent mask ****************************************
+list.files(here(vmask_output[scenario_number]),  
+           pattern = c("resample"), full.names = TRUE) -> folder_list 
+
+resample_lm_output = tibble(scenario = NA,
+                            slope = NA,
+                            slope_se = NA,
+                            slope_p = NA,
+                            folder = NA)
+
+for (i in 1:length(folder_list)){
+  list.files(folder_list[i], pattern = c("_all_.+rds"), full.names = TRUE) -> pred_files
+  temporal_trend(pred_files, "fixed_no_var") -> resample_lm_output_i
+  resample_lm_output = bind_rows(resample_lm_output, resample_lm_output_i)
+  print(paste0("resample", "**************", i))
+}
+
+#end----------------------------------------------------------
+stopCluster(cl)
+
+
+# join and get run_number ---------------------------------------------
+
+resample_lm_output %>% 
+  filter(!is.na(slope)) %>% 
+  ggplot(aes(x = slope)) +
+  geom_histogram(bins = 30, color="black", fill="white")
+
+mean(resample_lm_output$slope, na.rm = T)
+
+resample_lm_output2 <- resample_lm_output %>% filter(!is.na(slope))
+resample_lm_output2$folder 
+
+
+outputs = read.csv(paste0("output/", scenario_file[scenario_number])) %>%  # need update
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
+
+# tibble(run_number = c(1:100), outslope = outputs$Slope %>% unique()) -> optput_lm_slope
+
+outputs %>% 
+  mutate(outslope = Slope) %>% 
+  select(run_number, outslope) %>% 
+  unique() -> optput_lm_slope
+
+# need update
+
+rm_between(resample_lm_output2$folder, here(paste0(folder_file[scenario_number]),"resample"),
+           '_pred_all_vars', extract=TRUE)
+
+resample_lm_output2$run_number = unlist(rm_between(resample_lm_output2$folder,
+                                                   here(paste0(folder_file[scenario_number]),"resample"),
+                                                   '_pred_all_vars', extract=TRUE))
+
+resample_lm_output2$run_number <- as.numeric(resample_lm_output2$run_number)
+
+resample_lm_output2 %>%  
+  left_join(optput_lm_slope, by = "run_number") -> resample_lm_output2
+
+# need update based on scenario
+# write.csv(resample_lm_output2, "output/resample_lm_output_500_combine.csv", row.names = FALSE) 
+
+
+
+# all resample runs with a same mask ******************************************
+list.files(here(fjoin_output[scenario_number]),  
+           pattern = c("resample"), full.names = TRUE) -> folder_list 
+
+resample_lm_output = tibble(scenario = NA,
+                            slope = NA,
+                            slope_se = NA,
+                            slope_p = NA,
+                            folder = NA)
+
+for (i in 1:length(folder_list)){
+  list.files(folder_list[i], pattern = c("_all_.+rds"), full.names = TRUE) -> pred_files
+  temporal_trend(pred_files, "fixed_no_var") -> resample_lm_output_i
+  resample_lm_output = bind_rows(resample_lm_output, resample_lm_output_i)
+  print(paste0("resample", "**************", i))
+}
+
+#end----------------------------------------------------------
+stopCluster(cl)
+
+
+# join and get run_number ---------------------------------------------
+
+resample_lm_output %>% 
+  filter(!is.na(slope)) %>% 
+  ggplot(aes(x = slope)) +
+  geom_histogram(bins = 30, color="black", fill="white")
+
+mean(resample_lm_output$slope, na.rm = T)
+
+resample_lm_output2 <- resample_lm_output %>% filter(!is.na(slope))
+resample_lm_output2$folder 
+
+
+outputs = read.csv(paste0("output/", scenario_file[scenario_number])) %>%  # need update
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
+
+# tibble(run_number = c(1:100), outslope = outputs$Slope %>% unique()) -> optput_lm_slope
+
+outputs %>% 
+  mutate(outslope = Slope) %>% 
+  select(run_number, outslope) %>% 
+  unique() -> optput_lm_slope
+
+# need update
+rm_between(resample_lm_output2$folder, here(paste0(folder_file[scenario_number], "_fjoin"),"resample"),
+           '_pred_all_vars', extract=TRUE)
+
+resample_lm_output2$run_number = 
+  unlist(rm_between(resample_lm_output2$folder,
+                    here(paste0(folder_file[scenario_number], "_fjoin"),"resample"),
+                    '_pred_all_vars', extract=TRUE))
+
+resample_lm_output2$run_number <- as.numeric(resample_lm_output2$run_number)
+
+resample_lm_output2 %>%  
+  left_join(optput_lm_slope, by = "run_number") -> resample_lm_output2
+
+# need update based on scenario
+# write.csv(resample_lm_output2, "output/resample_lm_output_500_combine_fjoin.csv", row.names = FALSE)
+
 
