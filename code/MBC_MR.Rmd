@@ -533,7 +533,7 @@ plot_combine
 
 ## output figure
 ```{r}
-plot_patoine / plot_combine
+plot_patoine / plot_combine + plot_annotation(tag_levels = "a")
 # ggsave(here("output/figures", "resample_m500_200_times.png"), width = 7, height = 7)
 
 ```
@@ -656,7 +656,7 @@ sub_plot_combine
 
 ## output figure
 ```{r}
-sub_plot_patoine / sub_plot_combine
+sub_plot_patoine / sub_plot_combine + plot_annotation(tag_levels = "a")
 
 # ggsave(here("output/figures", "resample_m500_200_times_P005.png"), width = 7, height = 7)
 
@@ -765,7 +765,7 @@ plot_combine_fjoin
 
 ## output figure
 ```{r}
-plot_patoine_fjoin / plot_combine_fjoin
+plot_patoine_fjoin / plot_combine_fjoin + plot_annotation(tag_levels = "a")
 # ggsave(here("output/figures", "resample_m500_200_times_fjoin.png"), width = 7, height = 7)
 
 ```
