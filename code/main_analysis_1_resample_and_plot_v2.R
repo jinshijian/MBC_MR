@@ -301,7 +301,7 @@ outputs$run_number %>% unique() -> sample_number
 cl <- makeCluster(6) #8-10
 registerDoParallel(cl)
 
-for(i in sample_number[1:4]){
+for(i in sample_number){
   sdata <- outputs %>% filter(run_number == i)
   get_mask(sdata, "mask_combine_500")
 }

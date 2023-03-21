@@ -166,21 +166,10 @@ resample_lm_output2 %>%
 
 
 
-# scenario 1: rasample (n=110) 60 times with slope of lm from
+# scenario 2: rasample (n=500) 200 times with combined data
 # need to update the data and output folder 
 # *************************************************************************************
 # list.files(here("derived/resampe110_outputs_all"), pattern = c("resample"), full.names = TRUE) -> folder_list 
 # write.csv(resample_lm_output2, "output/resample_lm_output_110.csv", row.names = FALSE)
 # *************************************************************************************
 
-
-# scenario 3: randomly resample 100 times (n=500) from Patoine (n=762)
-# need to update the data and output folder 
-# *************************************************************************************
-# list.files(here("derived/resampe500_patoine_all"), pattern = c("resample"), full.names = TRUE) -> folder_list 
-# write.csv(resample_lm_output2, "output/resample_lm_output_500.csv", row.names = FALSE)
-# *************************************************************************************
-
-# saveRDS(resample_lm_output, here("derived", "resample_lm_output.rds"))# 
-# readRDS(here("derived", "resample_lm_output.rds")) -> resample_lm_output1
-# write.csv(resample_lm_output1, "derived/resample_lm_output1.csv", row.names = FALSE)

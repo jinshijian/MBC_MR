@@ -73,18 +73,28 @@ gg_height = 5.7
 ggplot2::theme_set(ggplot2::theme_bw())
 
 
+# scenario 1: randomly resample 100 times (n=500) from patoine (n=762)
+# scenario 2: randomly resample 100 times (n=500) from combine (n=762+106)
+
+scenario_file <- c("resampled_cmic_500_patoine.csv", "resampled_cmic_500_combined.csv")
+folder_file <- c("derived/resampe500_patoine_all", "derived/resampe500_combine")
+mask_file <- c("derived/mask_patoine_500/", "derived/mask_combine_500/")
+
 # *************************************************************************************
-# ---------------- Random forest model (06-1) all scenario --
-# this is for scenario 2: randomly resample 100 times (n=500) from combined
-# 'outputs' and 'folder_name' need to be updated if run other scenarios
+outputs = read.csv(paste0("output/", scenario_file[scenario_number])) %>%
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
 
-outputs = read.csv("output/resampled_cmic_500_combined.csv") %>% 
-  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S")))
+# need update
+folder_name <- paste0(folder_file[scenario_number], "/resample")
+folder_fjoin <- c("derived/resampe500_patoine_fjoin", "derived/resampe500_combine_fjoin") 
 
-folder_name <- "derived/resampe500_combine/resample"
+# need to update the data and output folder 
+scenario_number = 1 # need update based on scenario
+
 # *************************************************************************************
 
-outputs$Slope %>% unique() -> output_slope
+outputs$run_number %>% unique() -> output_number
 # non-fixed dynamic predictors
 all_dp <- c("") # changed by jian
 fclim_dp <- c("tmean", "prec") 
@@ -93,12 +103,13 @@ fLC_dp <- c("ndvi", "land_cover") # original condition
 
 
 # par setup 
-cl <- makeCluster(5, outfile = "")
+cl <- makeCluster(6, outfile = "")
 registerDoParallel(cl)
 
-for (i in 1:length(output_slope)){
+# for (i in 1){
+for (i in 1:output_number[1:2]){
   predictors <- glc_layers() %>% unname
-  cmic = outputs %>% filter(Slope == output_slope[i])
+  cmic = outputs %>% filter(run_number == i)
   set.seed(202)
   
   model <- train(x = cmic[,predictors], 
@@ -153,41 +164,59 @@ for (i in 1:length(output_slope)){
       filter(land_cover %in% lc_levs) %>% 
       mutate(land_cover = factor(land_cover))
     
-    # mask
-    fullmask <- glc_fullmask_df() %>% select(pid, mask)
+    # mask: update for dynamic mask ---------------------------------------updte
+    fullmask <- readRDS(paste0(mask_file[scenario_number], "fullmask_df", i, ".rds")) %>% select(pid, mask)
     
-    gridyear <- gridyear %>% left_join(fullmask, by = "pid") %>% 
-      filter(is.na(mask)) %>% select(-mask)
+    gridyear1 <- gridyear %>% left_join(fullmask, by = "pid") %>% 
+      filter(is.na(mask))  # %>% select(-mask) # include mask does not influence the result
     
-    # predict2013 (100 sec)
-    gridyear$pred <- predict(model, gridyear)
+    # predict (100 sec) 
+    gridyear1$pred <- predict(model, gridyear1)
+    
+    
+    if(!dir.exists((folder_file[scenario_number]))){
+      dir.create(folder_file[scenario_number])
+      }
     
     if (!dir.exists(here(paste0(folder_name, i ,'_pred_all_vars')))) {
-      dir.create(here(paste0(folder_name, i ,'_pred_all_vars')))}
+      dir.create(here(paste0(folder_name, i ,'_pred_all_vars')))
+      }
     
-    saveRDS(gridyear, here(paste0(folder_name, i ,'_pred_all_vars'),
-                           paste0("resample", i ,"_all_", iyear, ".rds")))
+    saveRDS(gridyear1, here(paste0(folder_name, i ,'_pred_all_vars'),
+                            paste0("resample", i ,"_all_", iyear, ".rds")))
+    
+    
+    # using same mask (fulljoin of all 200 runs) -------------------------update
+    fullmask_fjoin <- readRDS(paste0(mask_file[scenario_number], "fullmask_fjoin", ".rds")) %>% select(pid, mask)
+    
+    gridyear_fjoin <- gridyear %>% left_join(fullmask_fjoin, by = "pid") %>% 
+      filter(is.na(mask))  # %>% select(-mask) # include mask column does not influence the results
+    
+    # predict for fjoin (100 sec)
+    gridyear_fjoin$pred <- predict(model, gridyear_fjoin)
+    if(!dir.exists((folder_fjoin[scenario_number]))){
+      dir.create(folder_fjoin[scenario_number])
+      }
+    
+    if (!dir.exists(here(paste0(folder_fjoin[scenario_number], "/resample", i ,'_pred_all_vars')))) {
+      dir.create(here(paste0(folder_fjoin[scenario_number], "/resample", i ,'_pred_all_vars')))}
+    
+    saveRDS(gridyear_fjoin, here(paste0(folder_fjoin[scenario_number], "/resample", i ,'_pred_all_vars'),
+                                 paste0("resample", i ,"_all_", iyear, ".rds")))
+    
+    print(paste0("*************", iyear, "----------", Sys.time()))
     
   }
-  print(paste0("resample*************",i))
+  print(paste0("resample*************", i, "----------", Sys.time()))
 }
 
-#end----------------------------------------------------------
+#end----------------------------------------------------------------------------
 stopCluster(cl)
 
 
-# scenario 1: rasample (n=110) 60 times with slope of lm from
-# need to update the data and output folder 
-# *************************************************************************************
-# outputs = read.csv("output/resampled_cmic.csv") 
-# folder_name <- "derived/resampe110_outputs_all/resample"
-# *************************************************************************************
 
+# ******************************************************************************
+# for scenario 2, go to line 84, and change scenario_number to 2
+# ******************************************************************************
 
-# scenario 3: randomly resample 100 times (n=500) from Patoine (n=762)
-# need to update the data and output folder 
-# *************************************************************************************
-# outputs = read.csv("output/resampled_cmic_500_patoine.csv") 
-# folder_name <- "derived/resampe500_patoine_all/resample"
-# *************************************************************************************
 
