@@ -120,3 +120,211 @@ write.csv(outputs,"output/resampled_cmic_500_combined.csv", row.names = F)
 
 
 
+
+
+
+
+
+
+
+# The code below are used to perform the spatial coverage and generate masks
+# ******************************************************************************
+# ------- function for Environmental coverage analysis (06-2,3) -----------
+# ******************************************************************************
+# notes: need copy (or prepare) geodata before run codes below
+
+get_mask <- function(sdata, scenario){
+  predictors <- glc_layers() %>% unname
+  sdata <- as.data.frame(sdata) # needed
+  # random forest model
+  set.seed(202)
+  print(paste0("**********", i, "th random forest"))
+  Sys.time() %>% print()
+  mod <- train(x = sdata[,predictors], 
+               y = sdata$Cmic,
+               method = "rf",
+               importance = TRUE,
+               tuneGrid = expand.grid(mtry = c(2:4)), # length(predictors) or 2:6
+               trControl = trainControl(method = "cv", 
+                                        number = 20,
+                                        p = 0.75,
+                                        savePredictions = TRUE))
+  
+  mod # most often mtry = 2
+  
+  # RMSE + R2
+  mod$results %>% as_tibble %>% filter(mtry == mod$bestTune %>% unlist) %>% select(RMSE, Rsquared) %>% print()
+  
+  # no LC
+  vars <- glc_layers() %>% .[!. %in% c("land_cover")] %>% unname
+  
+  # stack all layers
+  st <- stack(map(vars, ~glc_get_resamp(.x, 2013, "5-15")))
+  names(st) <- vars
+  
+  # ~2 min
+  grid <- as.data.frame(st, xy = TRUE, na.rm = TRUE)
+  
+  # maha sdata
+  maha_cmic <- mahadist(dat = sdata, world = grid, vars = vars, xy = c("x", "y"))
+  mahamask <- maha_cmic %>% filter(mahatype == "chisq > 0.975") %>% select(x, y)
+  sdata <- mahadist(dat = sdata, world = grid, vars = vars, xy = c("x", "y"))
+  
+  ### RF model ----------------------------------------------------------------
+  predictors <- mod$trainingData %>% names %>% .[-length(.)]
+  
+  # prediction layers as stack
+  raspred <- stack(map(predictors, ~glc_get_resamp(.x, 2013, "5-15")))
+  # cbind(predictors, names(raspred) %>% word(sep = "_"))
+  names(raspred) <- predictors
+  
+  # ~2min
+  print(paste0("**********", i, "th grid"))
+  preddf <- as.data.frame(raspred, xy = TRUE, na.rm = TRUE)
+  all(names(preddf %>% select(-c(x, y))) %in% names(mod$trainingData))
+  
+  # fix land_cover col
+  preddf <- preddf %>% 
+    mutate(land_cover = glc_LC_num2chr(land_cover)) %>% 
+    filter(land_cover %in% levels(mod$trainingData$land_cover)) %>% 
+    mutate(land_cover = factor(land_cover)) #remove unused levels
+  
+  # predict from stack.as.df (~1min)
+  prediction <- predict(mod, preddf)
+  
+  ### aoa calculation ---------------------------------------------------------
+  # with variable weighting: (~5-10 min)
+  AOA <- aoa(preddf, model = mod, cl = cl) # previously with argument returnTrainDI
+  # AOA$AOA %>% table
+  
+  # saveRDS(AOA, here("derived", "06-2-AOA_object.rds"))
+  
+  ## put together ------------------------------------------------------------
+  
+  preds <- mod$pred[mod$pred$mtry==mod$bestTune$mtry,]
+  
+  absError <- abs(preds$pred[order(preds$rowIndex)]-preds$obs[order(preds$rowIndex)])
+  
+  preddf <- preddf %>% mutate(DI = AOA$DI,
+                              AOA = AOA$AOA)
+  
+  ## Create mask
+  aoamask <- preddf %>% filter(AOA == 0) %>% select(x, y)
+  aoamask$aoam <- 1
+  aoamask <- aoamask %>% 
+    mutate(pid = glc_pIDfromXY(x, y)) %>% 
+    select(-c(x,y))
+  
+  # mahalanobis mask
+  mahamask
+  mahamask$maham <- 1
+  mahamask <- mahamask %>% 
+    mutate(pid = glc_pIDfromXY(x, y)) %>% 
+    select(-c(x,y))
+  
+  # combine masks
+  fullmask <- full_join(aoamask, mahamask, by = "pid")
+  
+  fullmask <- fullmask %>% select(pid, maha_mask = maham, aoa_mask = aoam) %>% 
+    mutate(mask = 1) # as.numeric(maha_mask | aoa_mask)
+  
+  print(paste0("**********", i, "th save full mask"))
+  Sys.time() %>% print()
+  
+  # need update based on scenario
+  if(!dir.exists("derived")){
+    dir.create("derived")
+    }
+  if (!dir.exists(paste0("derived/", scenario))){
+    dir.create(paste0("derived/", scenario))
+  }
+  saveRDS(fullmask, here(paste0("derived/", scenario, "/", "fullmask_df", i, ".rds"))) 
+}
+
+
+# ******************************************************************************
+# ---------------- get mask for patoine_500 ----------------
+# ******************************************************************************
+
+# get mask for scenario mask_patoine_500 --------------------------------------
+# get masks for every 200 resamples
+
+outputs = read.csv("output/resampled_cmic_500_patoine.csv") %>% # need update
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
+
+outputs$run_number %>% unique() -> sample_number
+cl <- makeCluster(6) #8-10
+registerDoParallel(cl)
+
+for(i in sample_number){
+  sdata <- outputs %>% filter(run_number == i)
+  get_mask(sdata, "mask_patoine_500")
+}
+
+stopCluster(cl)
+
+
+# ---------------- get Intersection of 100 masks ----------------
+
+mask_file <- list.files(path = "derived/mask_patoine_500/")
+
+fullmask <- readRDS(paste0("derived/mask_patoine_500/", mask_file[1])) %>% 
+  select(pid, mask)
+
+for(i in 2:length(mask_file)){
+  fullmask_i <- readRDS(paste0("derived/mask_patoine_500/", mask_file[i])) %>% 
+    select(pid, mask)
+  
+  fullmask %>% full_join(fullmask_i, by = c("pid", "mask")) -> fullmask
+  print(paste0(i, "th run ****************"))
+}
+
+# need update
+saveRDS(fullmask, here(paste0("derived/mask_patoine_500/", "fullmask_fjoin", ".rds"))) 
+
+
+
+
+
+# ******************************************************************************
+# ---------------- get mask for combine_500 ----------------
+# ******************************************************************************
+# get mask for scenario mask_combine_500 --------------------------------------
+# get masks for every 200 resamples
+
+outputs = read.csv("output/resampled_cmic_500_combined.csv") %>% # need update
+  mutate(land_cover = factor(land_cover, levels = c("C", "FB", "FC", "FT", "G", "S"))) %>% 
+  mutate(tmean = (tmean+273)*10)
+
+outputs$run_number %>% unique() -> sample_number
+cl <- makeCluster(6) #8-10
+registerDoParallel(cl)
+
+for(i in sample_number[1:4]){
+  sdata <- outputs %>% filter(run_number == i)
+  get_mask(sdata, "mask_combine_500")
+}
+
+stopCluster(cl)
+
+
+# ---------------- get Intersection of 100 masks ----------------
+
+mask_file <- list.files(path = "derived/mask_combine_500/")
+
+fullmask <- readRDS(paste0("derived/mask_combine_500/", mask_file[1])) %>% 
+  select(pid, mask)
+
+for(i in 2:length(mask_file)){
+  fullmask_i <- readRDS(paste0("derived/mask_combine_500/", mask_file[i])) %>% 
+    select(pid, mask)
+  
+  fullmask %>% full_join(fullmask_i, by = c("pid", "mask")) -> fullmask
+  print(paste0(i, "th run ****************"))
+}
+
+# need update
+saveRDS(fullmask, here(paste0("derived/mask_combine_500/", "fullmask_fjoin", ".rds"))) 
+
+
