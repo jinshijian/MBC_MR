@@ -1,5 +1,0 @@
-"0",""
-"0","mbc_Patoine %>% filter(cookd < 4*mean(cookd, na.rm=T)) %>% "
-"0","  ggplot(aes(x = tmean_c, y = Cmic)) + "
-"0","  geom_point() +"
-"0","  geom_smooth(method = lm)"

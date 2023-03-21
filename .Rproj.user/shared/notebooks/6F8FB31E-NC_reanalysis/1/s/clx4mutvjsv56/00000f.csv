@@ -1,3 +1,0 @@
-"0","Patoine_data_figure5 = read_xlsx(""data/Patoine/Patoine_data_figure5.xlsx"", n_sheet=1, n_skip = 0)"
-"2","Error: `path` does not exist: ‘data/Patoine/Patoine_data_figure5.xlsx’
-"

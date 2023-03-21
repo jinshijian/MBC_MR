@@ -1,1 +1,0 @@
-{"height":4.0,"width":4.0,"size_behavior":1,"conditions":[[1,"Warning: \u001B[38;5;232mUse of `meta_count$Longitude` is discouraged.\n\u001B[36mℹ\u001B[38;5;232m Use `Longitude` instead.\u001B[39m"],[1,"Warning: \u001B[38;5;232mUse of `meta_count$Latitude` is discouraged.\n\u001B[36mℹ\u001B[38;5;232m Use `Latitude` instead.\u001B[39m"]]}

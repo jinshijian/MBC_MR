@@ -1,3 +1,0 @@
-"0",""
-"0","arrows(longterm_output$Low, as.numeric(longterm_output$Study2), longterm_output$High, as.numeric(longterm_output$Study2)"
-"0","       ,code=3,length=0.05,angle=90,longterm_output$col,lwd=2)"

@@ -7,3 +7,4 @@ output/figures/*
 
 .RData
 workflow.pptx
+.Rproj.user

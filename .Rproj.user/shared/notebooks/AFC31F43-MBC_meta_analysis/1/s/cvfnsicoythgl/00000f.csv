@@ -1,4 +1,0 @@
-"0","# Set chunks defaults, these options will be applied to all subsequent chunks"
-"0","knitr::opts_chunk$set(message = TRUE, include = TRUE, echo = FALSE,"
-"0","                      fig.height = 4, fig.width = 8)"
-"0",""

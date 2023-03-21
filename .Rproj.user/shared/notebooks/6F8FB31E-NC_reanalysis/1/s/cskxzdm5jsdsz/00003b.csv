@@ -1,2 +1,0 @@
-"0",""
-"0","text(x_max + 0.025, Patoine_data$ID, paste(Patoine_data$Scenario), cex=0.85, adj=0)"
