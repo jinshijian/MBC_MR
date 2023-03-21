@@ -64,9 +64,8 @@ cmic <- as.data.frame(cmic2) # needed
 ## resample 200 times -------------------------------------
 outputs <- cmic2[0,]
 
-set.seed(123456)
-
-for(i in 1:100){
+# set.seed(123456)
+for(i in 1:200){
   sample_cmic0_lm(cmic) -> sub_cmic
   run_number <- tibble(run_number = rep(i, 500))
   sub_cmic <- bind_cols(sub_cmic, run_number)
@@ -117,7 +116,7 @@ for(i in 1:200){
 }
 
 summary(outputs)
-# write.csv(outputs,"output/resampled_cmic_500_combined.csv", row.names = F)
+write.csv(outputs,"output/resampled_cmic_500_combined.csv", row.names = F)
 
 
 
