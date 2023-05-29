@@ -194,7 +194,7 @@ get_mask <- function(sdata, scenario){
   
   ### aoa calculation ---------------------------------------------------------
   # with variable weighting: (~5-10 min)
-  AOA <- aoa(preddf, model = mod, cl = cl) # previously with argument returnTrainDI
+  AOA <- aoa(preddf, model = mod) # previously with argument returnTrainDI, cl
   # AOA$AOA %>% table
   
   # saveRDS(AOA, here("derived", "06-2-AOA_object.rds"))
@@ -326,5 +326,139 @@ for(i in 2:length(mask_file)){
 
 # need update
 saveRDS(fullmask, here(paste0("derived/mask_combine_500/", "fullmask_fjoin", ".rds"))) 
+
+
+
+
+# ******************************************************************************
+# ---------------- plot mask of fjoin ----------------
+# ******************************************************************************
+### plot patoine --------------------------------------------------------------------
+fullmask <- readRDS("derived/mask_patoine_500/fullmask_fjoin.rds")
+preddf <- readRDS("derived/resampe500_combine/resample1_pred_all_vars/resample1_all_1992.rds")
+
+preddf %>% dplyr::select(-mask) -> preddf
+
+
+preddf <- preddf %>% mutate(pid = glc_pIDfromXY(x, y)) %>% 
+  left_join(fullmask, by = "pid")
+
+preddf %>% names
+
+sum(preddf$mask == 1, na.rm = TRUE)
+
+# Compare both
+preddf <- preddf %>% mutate(Category = case_when(
+  mask == 1 ~ "Area of outlier",
+  TRUE ~ "Predicted") %>% factor(levels = c("Area of outlier", "Predicted", "Deficient data")))
+
+preddf %>% count(Category)
+
+cmic <- glc_proc_data()
+
+
+# need to separate legend
+(p_mask <- ggplot(preddf, aes(x, y, fill = Category))+
+    borders(size = 0.3, fill = "grey90", ylim = c(-60, 90), colour = NA,
+            show.legend = TRUE)+
+    geom_raster(alpha = 0.7)+
+    scale_fill_manual(values = c("Area of outlier" = "#cc78df",
+                                 "Predicted" = "#8ef284",
+                                 "Deficient data" = "grey90"),
+                      drop = FALSE)+
+    theme_void()+
+    theme(
+      legend.position = c(0.2, 0.25),
+      legend.title = element_text(face = "bold"))+
+    coord_fixed())
+
+gg_width = 11
+gg_height = 5.7
+
+ggsave(plot = p_mask,
+       here("output/figures", "Figure_X4_predicted_patoine_fjoin.png"),
+       width = gg_width, height = gg_height)
+
+
+### plot combine --------------------------------------------------------------------
+fullmask <- readRDS("derived/mask_combine_500/fullmask_fjoin.rds")
+preddf <- readRDS("derived/resampe500_combine/resample1_pred_all_vars/resample1_all_1992.rds")
+
+preddf %>% select(-mask) -> preddf
+
+
+preddf <- preddf %>% mutate(pid = glc_pIDfromXY(x, y)) %>% 
+  left_join(fullmask, by = "pid")
+
+preddf %>% names
+
+sum(preddf$mask == 1, na.rm = TRUE)
+
+# Compare both
+preddf <- preddf %>% mutate(Category = case_when(
+  mask == 1 ~ "Area of outlier",
+  TRUE ~ "Predicted") %>%
+    factor(levels = c("Area of outlier", "Predicted", "Deficient data")))
+
+preddf %>% count(Category)
+
+cmic <- glc_proc_data()
+
+
+# need to separate legend
+(p_mask <- ggplot(preddf, aes(x, y, fill = Category))+
+    borders(size = 0.3, fill = "grey90", ylim = c(-60, 90), colour = NA,
+            show.legend = TRUE)+
+    geom_raster(alpha = 0.7)+
+    scale_fill_manual(values = c("Area of outlier" = "#cc78df",
+                                 "Predicted" = "#8ef284",
+                                 "Deficient data" = "grey90"),
+                      drop = FALSE)+
+    theme_void()+
+    theme(
+      legend.position = c(0.2, 0.25),
+      legend.title = element_text(face = "bold"))+
+    coord_fixed())
+
+gg_width = 11
+gg_height = 5.7
+
+ggsave(plot = p_mask,
+       here("output/figures", "Figure_X4_predicted_combine_fjoin.png"),
+       width = gg_width, height = gg_height)
+
+
+
+
+### plot mask ------------------------------------------------------------------
+## creat function
+### plot mask ------------------------------------------------------------------
+
+preddf <- readRDS("derived/resampe500_combine/resample1_pred_all_vars/resample1_all_1992.rds") %>% 
+  mutate(Category = "Predicted")
+
+preddf2 <- readRDS("derived/resampe500_combine/resample2_pred_all_vars/resample2_all_1992.rds") %>% 
+  mutate(Category = "Predicted")
+
+plot_mask <- function (sdata) {
+  p_mask <- ggplot(sdata, aes(x, y, fill = Category))+
+    borders(size = 0.3, fill = "grey90", ylim = c(-60, 90), colour = NA,
+            show.legend = TRUE)+
+    geom_raster(alpha = 0.7)+
+    scale_fill_manual(values = c("Predicted" = "#8ef284"),
+                      drop = FALSE)+
+    theme_void()+
+    theme(legend.position = c(0.2, 0.25),
+          legend.title = element_text(face = "bold"))+
+    coord_fixed()
+  p_mask
+}
+
+plot_mask(preddf)
+plot_mask(preddf2)
+
+
+
+
 
 
